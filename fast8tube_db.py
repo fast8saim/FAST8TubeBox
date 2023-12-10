@@ -89,3 +89,12 @@ def get_videos(channel_id):
     connection.close()
 
     return videos
+
+
+def save_api_key(api_key):
+    connection = sql.connect('fast8tubebox.db')
+    query = connection.cursor()
+    query.execute('DELETE FROM settings')
+    query.execute('INSERT INTO settings (API_KEY) VALUES (?)', (api_key,))
+    connection.commit()
+    connection.close()
