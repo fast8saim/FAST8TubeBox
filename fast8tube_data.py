@@ -1,4 +1,9 @@
+class Channel:
+    channel_id = ''
+    title = ''
+
+
 class Video:
     video_id = ''
-    name = ''
+    title = ''
     channel_id = ''

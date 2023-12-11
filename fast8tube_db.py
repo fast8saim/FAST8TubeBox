@@ -1,6 +1,7 @@
 import sqlite3 as sql
 import fast8tube_data as f8data
 
+
 def db_connect():
     return sql.connect('fast8tubebox.db')
 
@@ -15,7 +16,7 @@ def query_insert(query, connection=None, parameters=None):
     if parameters is None:
         cursor.execute(query)
     else:
-        cursor.execute(query, __parameters=parameters)
+        cursor.execute(query, parameters)
     connection.commit()
 
     if close:
@@ -27,7 +28,7 @@ def query_select(query, connection, parameters=None):
     if parameters is None:
         cursor.execute(query)
     else:
-        cursor.execute(query, __parameters=parameters)
+        cursor.execute(query, parameters)
 
     return cursor.fetchall()
 
@@ -35,57 +36,62 @@ def query_select(query, connection, parameters=None):
 def check_db():
     connection = db_connect()
     query_insert(
-        '''
+        query='''
         CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY,
         API_KEY TEXT NOT NULL
         )
-        ''', connection)
+        ''', connection=connection)
     query_insert(
-        '''
+        query='''
         CREATE TABLE IF NOT EXISTS channels (
-        id INTEGER PRIMARY KEY,
-        youtube_id TEXT NOT NULL,
-        name TEXT NOT NULL,
+        channel_id TEXT NOT NULL PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        subscribers INTEGER,
         from_begin BOOLEAN,
         from_new BOOLEAN
         )
-        ''', connection)
+        ''', connection=connection)
     query_insert(
-        '''
+        query='''
         CREATE TABLE IF NOT EXISTS videos (
-        id INTEGER PRIMARY KEY,
-        youtube_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        channel_id TEXT NOT NULL
+        video_id TEXT NOT NULL PRIMARY KEY,
+        channel_id TEXT NOT NULL,
+        title TEXT
         )
-        ''', connection)
+        ''', connection=connection)
     query_insert(
-        '''
+        query='''
         CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)
-        ''', connection)
+        ''', connection=connection)
 
     connection.close()
 
 
 def add_channel(channel_id, channel_name):
-    query_insert('INSERT INTO channels (youtube_id, name) VALUES (?, ?)', parameters=(channel_id, channel_name))
+    query_insert(query='INSERT INTO channels (channel_id, title) VALUES (?, ?)', parameters=(channel_id, channel_name))
 
 
 def add_video(channel_id, video_id, name):
-    query_insert('INSERT INTO videos (youtube_id, name, channel_id) VALUES (?, ?, ?)', parameters=(video_id, name, channel_id))
+    query_insert(query='INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)', parameters=(video_id, name, channel_id))
+
+
+def update_channel_info(channel_id, title, description, subscribers):
+    query_insert(query='UPDATE channels SET title = ?, description = ?, subscribers = ? WHERE channel_id = ?', parameters=(title, description, subscribers, channel_id))
 
 
 def get_channels():
     connection = db_connect()
-    result = query_select('SELECT youtube_id, name FROM channels', connection)
+    result = query_select(query='SELECT channel_id, title FROM channels', connection=connection)
 
     channels = []
     for sample in result:
-        channels.append({
-            'youtube_id': sample[0],
-            'name': sample[1]
-        })
+        channel = f8data.Channel()
+        channel.channel_id = sample[0]
+        channel.title = sample[1]
+        channels.append(channel)
+
     connection.close()
 
     return channels
@@ -93,13 +99,13 @@ def get_channels():
 
 def get_videos_list():
     connection = db_connect()
-    result = query_select('SELECT youtube_id, name, channel_id FROM videos', connection)
+    result = query_select(query='SELECT video_id, title, channel_id FROM videos LIMIT 100', connection=connection)
 
     videos = []
     for sample in result:
         video = f8data.Video()
         video.video_id = sample[0]
-        video.name = sample[1]
+        video.title = sample[1]
         video.channel_id = sample[2]
 
         videos.append(video)
@@ -110,15 +116,15 @@ def get_videos_list():
 
 def save_api_key(api_key):
     connection = db_connect()
-    query_insert('DELETE FROM settings', connection)
-    query_insert('INSERT INTO settings (API_KEY) VALUES (?)', connection, (api_key,))
+    query_insert(query='DELETE FROM settings', connection=connection)
+    query_insert(query='INSERT INTO settings (API_KEY) VALUES (?)', connection=connection, parameters=(api_key,))
 
     connection.close()
 
 
 def get_api_key():
     connection = db_connect()
-    result = query_select('SELECT API_KEY FROM settings LIMIT 1', connection)
+    result = query_select(query='SELECT API_KEY FROM settings LIMIT 1', connection=connection)
 
     api_key = ''
     for sample in result:

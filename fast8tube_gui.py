@@ -49,8 +49,9 @@ def main_window(page: ft.Page):
     )
 
     def update_videos(e):
-        channel_id = 'UCY9653K77Aznsf9Q3kKrDQA'
-        f8con.download_videos_list(api_key_field.value, channel_id)
+        channel_id = e.control.data
+        if len(channel_id) > 3:
+            f8con.download_videos_list(api_key_field.value, channel_id)
 
     def open_settings(e):
         page.dialog = dialog_settings
@@ -65,43 +66,42 @@ def main_window(page: ft.Page):
     page.add(
         ft.Row([
             ft.FloatingActionButton(icon=ft.icons.SETTINGS, on_click=open_settings),
-            ft.FloatingActionButton(icon=ft.icons.ADD, text='add channel', on_click=open_channel_add),
-            ft.FloatingActionButton(icon=ft.icons.UPLOAD, text='update videos', on_click=update_videos)
+            ft.FloatingActionButton(icon=ft.icons.ADD, text='add channel', on_click=open_channel_add)
         ])
     )
 
-    channels_table = ft.DataTable(
-        columns=[
-            ft.DataColumn(ft.Text('id')),
-            ft.DataColumn(ft.Text('name'))
-        ]
-    )
-    videos_column = ft.Column(
-        auto_scroll=False,
-        scroll=ft.ScrollMode.ADAPTIVE,
-        expand=1
+    channels_list = ft.ListView(width=400)
+    videos_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True, width=500, height=page.height - 20)
+
+    page.add(
+        ft.Row([
+            channels_list,
+            videos_list
+        ])
     )
 
     channels = f8db.get_channels()
-    page.add(
-        ft.Row([
-            channels_table,
-            videos_column
-        ])
-    )
-
     for channel in channels:
-        channels_table.rows.append(
-            ft.DataRow([
-                ft.DataCell(ft.Text(channel['youtube_id'])),
-                ft.DataCell(ft.Text(channel['name']))
-            ]),
+        channels_list.controls.append(
+            ft.ListTile(
+                title=ft.Text(channel.title),
+                subtitle=ft.Text(channel.channel_id),
+                leading=ft.Icon(ft.icons.ABC),
+                trailing=ft.PopupMenuButton(
+                    icon=ft.icons.MORE_VERT,
+                    items=[
+                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN),
+                        ft.ElevatedButton(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos, data=channel.channel_id),
+                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE)
+                    ]
+                )
             )
+        )
 
     videos = f8db.get_videos_list()
 
     for video in videos:
-        videos_column.controls.append(ft.Text(video.name))
+        videos_list.controls.append(ft.Text(video.title))
 
     page.update()
 
