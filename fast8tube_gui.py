@@ -101,7 +101,7 @@ def main_window(page: ft.Page):
     videos = f8db.get_videos_list()
 
     for video in videos:
-        videos_column.controls.append(ft.Text(video['name']))
+        videos_column.controls.append(ft.Text(video.name))
 
     page.update()
 

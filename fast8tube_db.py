@@ -1,5 +1,5 @@
 import sqlite3 as sql
-
+import fast8tube_data as f8data
 
 def db_connect():
     return sql.connect('fast8tubebox.db')
@@ -23,8 +23,6 @@ def query_insert(query, connection=None, parameters=None):
 
 
 def query_select(query, connection, parameters=None):
-    connection = db_connect()
-
     cursor = connection.cursor()
     if parameters is None:
         cursor.execute(query)
@@ -71,11 +69,11 @@ def check_db():
 
 
 def add_channel(channel_id, channel_name):
-    query_insert('INSERT INTO channels (youtube_id, name) VALUES (?, ?)', None, (channel_id, channel_name))
+    query_insert('INSERT INTO channels (youtube_id, name) VALUES (?, ?)', parameters=(channel_id, channel_name))
 
 
 def add_video(channel_id, video_id, name):
-    query_insert('INSERT INTO videos (youtube_id, name, channel_id) VALUES (?, ?, ?)', None, (video_id, name, channel_id))
+    query_insert('INSERT INTO videos (youtube_id, name, channel_id) VALUES (?, ?, ?)', parameters=(video_id, name, channel_id))
 
 
 def get_channels():
@@ -99,11 +97,12 @@ def get_videos_list():
 
     videos = []
     for sample in result:
-        videos.append({
-            'youtube_id': sample[0],
-            'name': sample[1],
-            'channel_id': sample[2]
-        })
+        video = f8data.Video()
+        video.video_id = sample[0]
+        video.name = sample[1]
+        video.channel_id = sample[2]
+
+        videos.append(video)
     connection.close()
 
     return videos
