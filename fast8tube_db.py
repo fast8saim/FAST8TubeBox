@@ -1,20 +1,49 @@
 import sqlite3 as sql
 
 
-def check_db():
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
+def db_connect():
+    return sql.connect('fast8tubebox.db')
 
-    query.execute(
+
+def query_insert(query, connection=None, parameters=None):
+    close = False
+    if connection is None:
+        connection = db_connect()
+        close = True
+
+    cursor = connection.cursor()
+    if parameters is None:
+        cursor.execute(query)
+    else:
+        cursor.execute(query, __parameters=parameters)
+    connection.commit()
+
+    if close:
+        connection.close()
+
+
+def query_select(query, connection, parameters=None):
+    connection = db_connect()
+
+    cursor = connection.cursor()
+    if parameters is None:
+        cursor.execute(query)
+    else:
+        cursor.execute(query, __parameters=parameters)
+
+    return cursor.fetchall()
+
+
+def check_db():
+    connection = db_connect()
+    query_insert(
         '''
         CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY,
         API_KEY TEXT NOT NULL
         )
-        '''
-    )
-    connection.commit()
-    query.execute(
+        ''', connection)
+    query_insert(
         '''
         CREATE TABLE IF NOT EXISTS channels (
         id INTEGER PRIMARY KEY,
@@ -23,10 +52,8 @@ def check_db():
         from_begin BOOLEAN,
         from_new BOOLEAN
         )
-        '''
-    )
-    connection.commit()
-    query.execute(
+        ''', connection)
+    query_insert(
         '''
         CREATE TABLE IF NOT EXISTS videos (
         id INTEGER PRIMARY KEY,
@@ -34,42 +61,26 @@ def check_db():
         name TEXT NOT NULL,
         channel_id TEXT NOT NULL
         )
-        '''
-    )
-    connection.commit()
-    query.execute(
+        ''', connection)
+    query_insert(
         '''
         CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)
-        '''
-    )
-    connection.commit()
+        ''', connection)
 
     connection.close()
 
 
 def add_channel(channel_id, channel_name):
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
-    query.execute('INSERT INTO channels (youtube_id, name) VALUES (?, ?)', (channel_id, channel_name))
-
-    connection.commit()
-    connection.close()
+    query_insert('INSERT INTO channels (youtube_id, name) VALUES (?, ?)', None, (channel_id, channel_name))
 
 
 def add_video(channel_id, video_id, name):
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
-    query.execute('INSERT INTO videos (youtube_id, name, channel_id) VALUES (?, ?, ?)', (video_id, name, channel_id))
-
-    connection.commit()
-    connection.close()
+    query_insert('INSERT INTO videos (youtube_id, name, channel_id) VALUES (?, ?, ?)', None, (video_id, name, channel_id))
 
 
 def get_channels():
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
-    query.execute('SELECT youtube_id, name FROM channels')
-    result = query.fetchall()
+    connection = db_connect()
+    result = query_select('SELECT youtube_id, name FROM channels', connection)
 
     channels = []
     for sample in result:
@@ -83,10 +94,8 @@ def get_channels():
 
 
 def get_videos_list():
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
-    query.execute('SELECT youtube_id, name, channel_id FROM videos')
-    result = query.fetchall()
+    connection = db_connect()
+    result = query_select('SELECT youtube_id, name, channel_id FROM videos', connection)
 
     videos = []
     for sample in result:
@@ -101,19 +110,17 @@ def get_videos_list():
 
 
 def save_api_key(api_key):
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
-    query.execute('DELETE FROM settings')
-    query.execute('INSERT INTO settings (API_KEY) VALUES (?)', (api_key,))
-    connection.commit()
+    connection = db_connect()
+    query_insert('DELETE FROM settings', connection)
+    query_insert('INSERT INTO settings (API_KEY) VALUES (?)', connection, (api_key,))
+
     connection.close()
 
 
 def get_api_key():
-    connection = sql.connect('fast8tubebox.db')
-    query = connection.cursor()
-    query.execute('SELECT API_KEY FROM settings LIMIT 1')
-    result = query.fetchall()
+    connection = db_connect()
+    result = query_select('SELECT API_KEY FROM settings LIMIT 1', connection)
+
     api_key = ''
     for sample in result:
         api_key = sample[0]
