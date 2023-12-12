@@ -7,9 +7,14 @@ def main_window(page: ft.Page):
     page.title = "FAST8 Tube box"
     page.theme_mode = ft.ThemeMode.DARK
 
+    def page_resize(e):
+        print("New page size:", page.window_width, page.window_height)
+
+    page.on_resize = page_resize
+
     api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
-    channel_id_field = ft.TextField(label='id канала')
     api_key_field.value = f8db.get_api_key()
+    channel_id_field = ft.TextField(label='id канала')
 
     def close_dialog_settings(e):
         dialog_settings.open = False
@@ -40,8 +45,13 @@ def main_window(page: ft.Page):
 
     dialog_add_channel = ft.AlertDialog(
         modal=True,
-        title=ft.Text('Добавить канал'),
-        content=channel_id_field,
+        title=ft.Text('Youtube-канал', width=400),
+        content=ft.Column([
+                channel_id_field,
+                ft.Checkbox(label='Смотреть новое'),
+                ft.Checkbox(label='Смотреть с начала')
+                ]
+            ),
         actions=[
             ft.TextButton("Сохранить", on_click=save_close_dialog_add_channel),
             ft.TextButton("Закрыть", on_click=close_dialog_add_channel)
@@ -66,7 +76,7 @@ def main_window(page: ft.Page):
     page.add(
         ft.Row([
             ft.FloatingActionButton(icon=ft.icons.SETTINGS, on_click=open_settings),
-            ft.FloatingActionButton(icon=ft.icons.ADD, text='add channel', on_click=open_channel_add)
+            ft.FloatingActionButton(icon=ft.icons.ADD, text='Добавить канал', on_click=open_channel_add)
         ])
     )
 

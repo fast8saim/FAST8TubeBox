@@ -65,6 +65,13 @@ def check_db():
         query='''
         CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)
         ''', connection=connection)
+    query_insert(
+        query='''
+            CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL
+            )
+            ''', connection=connection)
 
     connection.close()
 
