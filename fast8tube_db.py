@@ -84,6 +84,25 @@ def add_video(channel_id, video_id, name):
     query_insert(query='INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)', parameters=(video_id, name, channel_id))
 
 
+def add_category(name):
+    query_insert(query='INSERT INTO categories (name) VALUES (?)', parameters=(name,))
+
+
+def get_categories():
+    connection = db_connect()
+    result = query_select(query='SELECT name FROM categories', connection=connection)
+
+    categories = []
+    for sample in result:
+        category = f8data.Category()
+        category.name = sample[0]
+        categories.append(category)
+
+    connection.close()
+
+    return categories
+
+
 def update_channel_info(channel_id, title, description, subscribers):
     query_insert(query='UPDATE channels SET title = ?, description = ?, subscribers = ? WHERE channel_id = ?', parameters=(title, description, subscribers, channel_id))
 

@@ -7,3 +7,7 @@ class Video:
     video_id = ''
     title = ''
     channel_id = ''
+
+
+class Category:
+    name = ''
