@@ -1,6 +1,7 @@
 import flet as ft
-import fast8tube_db as f8db
+import fast8tube_sql as f8db
 import fast8tube_connect as f8con
+import fast8tube_data as f8data
 
 
 def main_window(page: ft.Page):
@@ -8,8 +9,11 @@ def main_window(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.window_title_bar_hidden = True
 
+    f8db.check_db()
+    f8data.API_KEY = f8db.get_api_key()
+
     api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
-    api_key_field.value = f8db.get_api_key()
+    api_key_field.value = f8data.API_KEY
     channel_id_field = ft.TextField(label='id канала')
 
     def close_dialog_settings(e):
@@ -36,7 +40,10 @@ def main_window(page: ft.Page):
 
     def save_close_dialog_add_channel(e):
         if len(channel_id_field.value) > 1:
-            f8db.add_channel(channel_id_field.value, channel_id_field.value)
+            channel = f8data.Channel(channel_id_field.value)
+            channel.read()
+            channel.download_info()
+            channel.write()
         close_dialog_add_channel(e)
 
     dialog_add_channel = ft.AlertDialog(
@@ -102,8 +109,11 @@ def main_window(page: ft.Page):
     )
     channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=page.height - 100)
     slide_column.controls.append(channels_list)
-    channels = f8db.get_channels()
-    for channel in channels:
+
+    channels = f8data.Channels()
+    channels.get()
+
+    for channel in channels.list:
         channels_list.controls.append(
             ft.ListTile(
                 title=ft.Text(channel.title),
@@ -129,7 +139,6 @@ def main_window(page: ft.Page):
         main_column.height = page.window_height
         slide_column.height = page.window_height
         videos_list.height = page.window_height
-        #channels_list.height = page.window_height - 100
         page.update()
 
     page.on_resize = page_resize
