@@ -1,5 +1,5 @@
-import fast8tube_sql as f8sql
-import fast8tube_connect as f8con
+import fast8tube_sql
+import fast8tube_connect
 
 API_KEY = ''
 
@@ -19,7 +19,7 @@ class Channel:
         self.channel_id = channel_id
 
     def read(self):
-        result = f8sql.get_channel(self.channel_id)
+        result = fast8tube_sql.read_channel(self.channel_id)
         for sample in result:
             self.fill(sample)
 
@@ -35,17 +35,17 @@ class Channel:
         self.uploads_id = sample[8]
 
     def write(self):
-        f8sql.update_channel(self)
+        fast8tube_sql.update_channel(self)
 
     def download_info(self):
-        f8con.download_channel_info(API_KEY, self)
+        fast8tube_connect.download_channel_info(API_KEY, self)
 
 
 class Channels:
     list = []
 
     def get(self):
-        result = f8sql.get_channel()
+        result = fast8tube_sql.read_channel()
         for sample in result:
             channel = Channel(sample[0])
             channel.fill(sample)

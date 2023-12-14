@@ -1,6 +1,4 @@
 from googleapiclient.discovery import build
-
-import fast8tube_data
 import fast8tube_sql as f8db
 
 

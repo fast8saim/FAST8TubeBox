@@ -2,6 +2,36 @@ import flet as ft
 import fast8tube_sql as f8db
 import fast8tube_connect as f8con
 import fast8tube_data as f8data
+from fast8tube_data import Channels
+
+
+def fill_videos(videos_list):
+    videos = f8db.read_videos_list()
+    for video in videos:
+        videos_list.controls.append(ft.Text(video.title))
+
+
+def fill_channels(channels_list, update_videos):
+    channels = Channels()
+    channels.get()
+
+    for channel in channels.list:
+        channels_list.controls.append(
+            ft.ListTile(
+                title=ft.Text(channel.title),
+                subtitle=ft.Text(channel.channel_id),
+                leading=ft.Icon(ft.icons.ABC),
+                trailing=ft.PopupMenuButton(
+                    icon=ft.icons.MORE_VERT,
+                    items=[
+                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN),
+                        ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos,
+                                         data=channel.channel_id),
+                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE)
+                    ]
+                )
+            )
+        )
 
 
 def main_window(page: ft.Page):
@@ -9,8 +39,8 @@ def main_window(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.window_title_bar_hidden = True
 
-    f8db.check_db()
-    f8data.API_KEY = f8db.get_api_key()
+    f8db.check_database()
+    f8data.API_KEY = f8db.read_api_key()
 
     api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
     api_key_field.value = f8data.API_KEY
@@ -87,9 +117,6 @@ def main_window(page: ft.Page):
 
     videos_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=False, height=page.height)
     main_column.controls.append(videos_list)
-    videos = f8db.get_videos_list()
-    for video in videos:
-        videos_list.controls.append(ft.Text(video.title))
 
     slide_column.controls.append(
         ft.Row([
@@ -110,28 +137,10 @@ def main_window(page: ft.Page):
     channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=page.height - 100)
     slide_column.controls.append(channels_list)
 
-    channels = f8data.Channels()
-    channels.get()
+    fill_channels(channels_list, update_videos)
+    fill_videos(videos_list)
 
-    for channel in channels.list:
-        channels_list.controls.append(
-            ft.ListTile(
-                title=ft.Text(channel.title),
-                subtitle=ft.Text(channel.channel_id),
-                leading=ft.Icon(ft.icons.ABC),
-                trailing=ft.PopupMenuButton(
-                    icon=ft.icons.MORE_VERT,
-                    items=[
-                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN),
-                        ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos,
-                                         data=channel.channel_id),
-                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE)
-                    ]
-                )
-            )
-        )
-
-    categories = f8db.get_categories()
+    categories = f8db.read_categories()
     for category in categories:
         pass
 

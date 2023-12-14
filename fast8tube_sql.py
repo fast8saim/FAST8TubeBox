@@ -1,53 +1,52 @@
-import sqlite3 as sql
+import sqlite3
 import fast8tube_data as f8data
+
+DATABASE_NAME = 'fast8tubebox.db'
 
 
 class Query:
     text = ''
+    parameters = ()
+    connection = None
+
+    def __init__(self, text='', parameters=()):
+        self.connection = sqlite3.connect(DATABASE_NAME)
+        self.text = text
+        self.parameters = parameters
+
+    def __query(self):
+        cursor = self.connection.cursor()
+        cursor.execute(self.text, self.parameters)
+        return cursor
+
+    def update(self, close=False):
+        self.__query()
+        self.connection.commit()
+        if close:
+            self.close_connection()
+
+    def select(self, close=False):
+        cursor = self.__query()
+        result = cursor.fetchall()
+        if close:
+            self.close_connection()
+        return result
+
+    def close_connection(self):
+        if not self.connection is None:
+            self.connection.close()
 
 
-def db_connect():
-    return sql.connect('fast8tubebox.db')
-
-
-def query_insert(query, connection=None, parameters=None):
-    close = False
-    if connection is None:
-        connection = db_connect()
-        close = True
-
-    cursor = connection.cursor()
-    if parameters is None:
-        cursor.execute(query)
-    else:
-        cursor.execute(query, parameters)
-    connection.commit()
-
-    if close:
-        connection.close()
-
-
-def query_select(query, connection, parameters=None):
-    cursor = connection.cursor()
-    if parameters is None:
-        cursor.execute(query)
-    else:
-        cursor.execute(query, parameters)
-
-    return cursor.fetchall()
-
-
-def check_db():
-    connection = db_connect()
-    query_insert(
-        query='''
+def check_database():
+    query = Query()
+    query.text = '''
         CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY,
         API_KEY TEXT NOT NULL
         )
-        ''', connection=connection)
-    query_insert(
-        query='''
+        '''
+    query.update()
+    query.text = '''
         CREATE TABLE IF NOT EXISTS channels (
         channel_id TEXT NOT NULL PRIMARY KEY,
         title TEXT NOT NULL,
@@ -59,68 +58,101 @@ def check_db():
         add_date timestamp NOT NULL,
         uploads_id TEXT NOT NULL
         )
-        ''', connection=connection)
-    query_insert(
-        query='''
+        '''
+    query.update()
+    query.text = '''
         CREATE TABLE IF NOT EXISTS videos (
         video_id TEXT NOT NULL PRIMARY KEY,
         channel_id TEXT NOT NULL,
         title TEXT,
         published_at timestamp NOT NULL
         )
-        ''', connection=connection)
-    query_insert(
-        query='''
+        '''
+    query.update()
+    query.text = '''
         CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)
-        ''', connection=connection)
-    query_insert(
-        query='''
+        '''
+    query.update()
+    query.text = '''
             CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL
             )
-            ''', connection=connection)
+            '''
+    query.update()
 
-    connection.close()
+    query.close_connection()
+
+
+def save_api_key(api_key):
+    query = Query(text='DELETE FROM settings')
+    query.update()
+    query.text = 'INSERT INTO settings (API_KEY) VALUES (?)'
+    query.parameters = (api_key,)
+    query.update(True)
+
+
+def read_api_key():
+    query = Query(text='SELECT API_KEY FROM settings LIMIT 1')
+    result = query.select(True)
+
+    api_key = ''
+    for sample in result:
+        api_key = sample[0]
+        break
+
+    return api_key
 
 
 def update_channel(channel):
-    connection = db_connect()
-    result = query_select(query='SELECT channel_id WHERE channel_id = ?', connection=connection, parameters=(channel.channel_id,))
-    if len(result) == 0:
-        query = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    query = Query(text='SELECT channel_id WHERE channel_id = ?', parameters=(channel.channel_id,))
+    if len(query.select()) == 0:
+        query.text = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     else:
-        query = 'UPDATE channels SET title = ?, description = ?, subscribers = ?, from_begin = ?, from_new = ?, need_translate = ?, add_date = ?, uploads_id = ? WHERE channel_id = ?'
+        query.text = 'UPDATE channels SET title = ?, description = ?, subscribers = ?, from_begin = ?, from_new = ?, need_translate = ?, add_date = ?, uploads_id = ? WHERE channel_id = ?'
 
-    query_insert(query=query, connection=connection, parameters=(channel.title, channel.description, channel.subscribers, channel.from_begin, channel.from_new, channel.need_translate, channel.add_date, channel.uploads_id, channel.channel_id))
-    connection.close()
+    query.parameters = (
+        channel.title,
+        channel.description,
+        channel.subscribers,
+        channel.from_begin,
+        channel.from_new,
+        channel.need_translate,
+        channel.add_date,
+        channel.uploads_id,
+        channel.channel_id
+    )
+    query.update(True)
 
 
-def get_channel(channel_id=None):
-    connection = db_connect()
-    query = 'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id FROM channels ORDER BY title'
+def read_channel(channel_id=None):
+    query = Query()
+
     if channel_id is None:
-        parameters = None
+        condition = ''
+        parameters = ()
     else:
-        query = query + ' WHERE channel_id = ?'
+        condition = ' WHERE channel_id = ?'
         parameters = (channel_id,)
 
-    result = query_select(query=query, connection=connection, parameters=parameters)
-    connection.close()
-    return result
+    query.text = f'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id FROM channels ORDER BY title {condition}'
+    query.parameters = parameters
+    return query.select(True)
 
 
 def add_video(channel_id, video_id, name, published_at):
-    query_insert(query='INSERT INTO videos (video_id, title, channel_id, published_at) VALUES (?, ?, ?, ?)', parameters=(video_id, name, channel_id, published_at))
+    query = Query(text='INSERT INTO videos (video_id, title, channel_id, published_at) VALUES (?, ?, ?, ?)', parameters=(video_id, name, channel_id, published_at))
+    query.update(True)
 
 
 def add_category(name):
-    query_insert(query='INSERT INTO categories (name) VALUES (?)', parameters=(name,))
+    query = Query(text='INSERT INTO categories (name) VALUES (?)', parameters=(name,))
+    query.update(True)
 
 
-def get_categories():
-    connection = db_connect()
-    result = query_select(query='SELECT id, name FROM categories ORDER BY name', connection=connection)
+def read_categories():
+    query = Query(text='SELECT id, name FROM categories ORDER BY name')
+    result = query.select(True)
 
     categories = []
     for sample in result:
@@ -129,14 +161,12 @@ def get_categories():
         category.name = sample[1]
         categories.append(category)
 
-    connection.close()
-
     return categories
 
 
-def get_videos_list():
-    connection = db_connect()
-    result = query_select(query='SELECT video_id, title, channel_id FROM videos LIMIT 100', connection=connection)
+def read_videos_list():
+    query = Query(text='SELECT video_id, title, channel_id FROM videos LIMIT 100')
+    result = query.select()
 
     videos = []
     for sample in result:
@@ -146,27 +176,5 @@ def get_videos_list():
         video.channel_id = sample[2]
 
         videos.append(video)
-    connection.close()
 
     return videos
-
-
-def save_api_key(api_key):
-    connection = db_connect()
-    query_insert(query='DELETE FROM settings', connection=connection)
-    query_insert(query='INSERT INTO settings (API_KEY) VALUES (?)', connection=connection, parameters=(api_key,))
-
-    connection.close()
-
-
-def get_api_key():
-    connection = db_connect()
-    result = query_select(query='SELECT API_KEY FROM settings LIMIT 1', connection=connection)
-
-    api_key = ''
-    for sample in result:
-        api_key = sample[0]
-        break
-
-    connection.close()
-    return api_key
