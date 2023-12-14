@@ -42,9 +42,7 @@ def check_database():
     query.text = '''
         CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY,
-        API_KEY TEXT NOT NULL
-        )
-        '''
+        API_KEY TEXT NOT NULL)'''
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS channels (
@@ -56,29 +54,21 @@ def check_database():
         from_new BOOLEAN NOT NULL,
         need_translate BOOLEAN NOT NULL,
         add_date timestamp NOT NULL,
-        uploads_id TEXT NOT NULL
-        )
-        '''
+        uploads_id TEXT NOT NULL)'''
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS videos (
         video_id TEXT NOT NULL PRIMARY KEY,
         channel_id TEXT NOT NULL,
         title TEXT,
-        published_at timestamp NOT NULL
-        )
-        '''
+        published_at timestamp NOT NULL)'''
+    query.update()
+    query.text = 'CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)'
     query.update()
     query.text = '''
-        CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)
-        '''
-    query.update()
-    query.text = '''
-            CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
-            )
-            '''
+        CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL)'''
     query.update()
 
     query.close_connection()
