@@ -2,6 +2,7 @@ import fast8tube_sql
 import fast8tube_connect
 
 API_KEY = ''
+THEME = ''
 
 
 class Channel:
@@ -44,7 +45,7 @@ class Channel:
 class Channels:
     list = []
 
-    def get(self):
+    def read(self):
         result = fast8tube_sql.read_channel()
         for sample in result:
             channel = Channel(sample[0])
@@ -52,12 +53,68 @@ class Channels:
             self.list.append(channel)
 
 
+class Category:
+    category_id = 0
+    title = ''
+
+    def __init__(self, category_id=0, title=''):
+        self.category_id = category_id
+        self.title = title
+
+    def read(self):
+        result = fast8tube_sql.read_category(self.category_id)
+        for sample in result:
+            self.fill(sample)
+
+    def fill(self, sample):
+        self.category_id = sample[0]
+        self.title = sample[1]
+
+    def write(self):
+        fast8tube_sql.update_category(self)
+
+
+class Categories:
+    list = []
+
+    def read(self):
+        result = fast8tube_sql.read_category()
+        for sample in result:
+            category = Category(sample[0])
+            category.fill(sample)
+            self.list.append(category)
+
+
 class Video:
     video_id = ''
     title = ''
     channel_id = ''
+    published_at = ''
+
+    def __init__(self, video_id=''):
+        self.video_id = video_id
+
+    def read(self):
+        result = fast8tube_sql.read_video(self.video_id)
+        for sample in result:
+            self.fill(sample)
+
+    def fill(self, sample):
+        self.video_id = sample[0]
+        self.title = sample[1]
+        self.channel_id = sample[2]
+        self.published_at = sample[3]
+
+    def write(self):
+        fast8tube_sql.update_video(self)
 
 
-class Category:
-    id = 0
-    name = ''
+class Videos:
+    list = []
+
+    def read(self):
+        result = fast8tube_sql.read_video()
+        for sample in result:
+            video = Video(sample[0])
+            video.fill(sample)
+            self.list.append(video)

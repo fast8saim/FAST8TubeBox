@@ -1,5 +1,4 @@
 import sqlite3
-import fast8tube_data
 
 DATABASE_NAME = 'fast8tubebox.db'
 
@@ -42,7 +41,8 @@ def check_database():
     query.text = '''
         CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY,
-        API_KEY TEXT NOT NULL)'''
+        api_key TEXT NOT NULL,
+        theme BOOLEAN NOT NULL)'''
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS channels (
@@ -60,42 +60,44 @@ def check_database():
         CREATE TABLE IF NOT EXISTS videos (
         video_id TEXT NOT NULL PRIMARY KEY,
         channel_id TEXT NOT NULL,
-        title TEXT,
+        title TEXT NOT NULL,
         published_at timestamp NOT NULL)'''
     query.update()
     query.text = 'CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)'
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL)'''
+        category_id INTEGER NOT NULL PRIMARY KEY,
+        title TEXT NOT NULL)'''
     query.update()
 
     query.close_connection()
 
 
-def save_api_key(api_key):
+def save_settings(api_key, theme):
     query = Query(text='DELETE FROM settings')
     query.update()
-    query.text = 'INSERT INTO settings (API_KEY) VALUES (?)'
-    query.parameters = (api_key,)
+    query.text = 'INSERT INTO settings (api_key, theme) VALUES (?, ?)'
+    query.parameters = (api_key, theme)
     query.update(True)
 
 
-def read_api_key():
-    query = Query(text='SELECT API_KEY FROM settings LIMIT 1')
+def read_settings():
+    query = Query(text='SELECT api_key, theme FROM settings LIMIT 1')
     result = query.select(True)
 
     api_key = ''
+    theme = True
     for sample in result:
         api_key = sample[0]
+        theme = bool(sample[1])
         break
 
-    return api_key
+    return api_key, theme
 
 
 def update_channel(channel):
-    query = Query(text='SELECT channel_id WHERE channel_id = ?', parameters=(channel.channel_id,))
+    query = Query(text='SELECT channel_id FROM channels WHERE channel_id = ?', parameters=(channel.channel_id,))
     if len(query.select()) == 0:
         query.text = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     else:
@@ -122,49 +124,67 @@ def read_channel(channel_id=None):
         condition = ''
         parameters = ()
     else:
-        condition = ' WHERE channel_id = ?'
+        condition = 'WHERE channel_id = ?'
         parameters = (channel_id,)
 
-    query.text = f'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id FROM channels ORDER BY title {condition}'
+    query.text = f'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id FROM channels {condition} ORDER BY title'
     query.parameters = parameters
     return query.select(True)
 
 
-def add_video(channel_id, video_id, name, published_at):
-    query = Query(text='INSERT INTO videos (video_id, title, channel_id, published_at) VALUES (?, ?, ?, ?)', parameters=(video_id, name, channel_id, published_at))
+def update_category(category):
+    query = Query()
+    if category.category_id == 0:
+        query.text = 'INSERT INTO categories (title) VALUES (?)'
+        query.parameters = (category.title,)
+    else:
+        query.text = 'UPDATE categories SET title = ? WHERE category_id = ?'
+        query.parameters = (category.title, category.category_id)
+
     query.update(True)
 
 
-def add_category(name):
-    query = Query(text='INSERT INTO categories (name) VALUES (?)', parameters=(name,))
+def read_category(category_id=None):
+    query = Query()
+
+    if category_id is None:
+        condition = ''
+        parameters = ()
+    else:
+        condition = 'WHERE category_id = ?'
+        parameters = (category_id,)
+
+    query.text = f'SELECT category_id, title FROM categories {condition} ORDER BY title'
+    query.parameters = parameters
+    return query.select(True)
+
+
+def update_video(video):
+    query = Query(text='SELECT video_id FROM videos WHERE video_id = ?', parameters=(video.video_id,))
+    if len(query.select()) == 0:
+        query.text = 'INSERT INTO videos (title, channel_id, published_at, video_id) VALUES (?, ?, ?, ?)'
+    else:
+        query.text = 'UPDATE videos SET title = ?, channel_id = ?, published_at = ? WHERE video_id = ?'
+
+    query.parameters = (
+        video.title,
+        video.channel_id,
+        video.published_at,
+        video.video_id
+    )
     query.update(True)
 
 
-def read_categories():
-    query = Query(text='SELECT id, name FROM categories ORDER BY name')
-    result = query.select(True)
+def read_video(video_id=None):
+    query = Query()
 
-    categories = []
-    for sample in result:
-        category = fast8tube_data.Category()
-        category.id = sample[0]
-        category.name = sample[1]
-        categories.append(category)
+    if video_id is None:
+        condition = ''
+        parameters = ()
+    else:
+        condition = 'WHERE video_id = ?'
+        parameters = (video_id,)
 
-    return categories
-
-
-def read_videos_list():
-    query = Query(text='SELECT video_id, title, channel_id FROM videos LIMIT 100')
-    result = query.select()
-
-    videos = []
-    for sample in result:
-        video = fast8tube_data.Video()
-        video.video_id = sample[0]
-        video.title = sample[1]
-        video.channel_id = sample[2]
-
-        videos.append(video)
-
-    return videos
+    query.text = f'SELECT video_id, title, channel_id, published_at FROM videos {condition} LIMIT 100'
+    query.parameters = parameters
+    return query.select(True)

@@ -1,19 +1,20 @@
 import flet as ft
-import fast8tube_sql as f8db
-import fast8tube_connect as f8con
-import fast8tube_data as f8data
-from fast8tube_data import Channels
+import fast8tube_sql
+import fast8tube_connect
+import fast8tube_data
+from fast8tube_data import Channel, Channels, Categories, Videos
 
 
 def fill_videos(videos_list):
-    videos = f8db.read_videos_list()
-    for video in videos:
+    videos = Videos()
+    videos.read()
+    for video in videos.list:
         videos_list.controls.append(ft.Text(video.title))
 
 
-def fill_channels(channels_list, update_videos):
+def fill_channels(channels_list, update_videos, edit_channel):
     channels = Channels()
-    channels.get()
+    channels.read()
 
     for channel in channels.list:
         channels_list.controls.append(
@@ -24,26 +25,40 @@ def fill_channels(channels_list, update_videos):
                 trailing=ft.PopupMenuButton(
                     icon=ft.icons.MORE_VERT,
                     items=[
-                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN),
-                        ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos,
-                                         data=channel.channel_id),
-                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE)
+                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=edit_channel, data=channel),
+                        ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos, data=channel),
+                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)
                     ]
                 )
             )
         )
 
 
+def dialog(title, content, actions):
+    return ft.AlertDialog(
+        modal=True,
+        title=ft.Text(title, width=400),
+        content=content,
+        actions=actions)
+
+
 def main_window(page: ft.Page):
     page.title = "FAST8 Tube box"
-    page.theme_mode = ft.ThemeMode.DARK
     page.window_title_bar_hidden = True
 
-    f8db.check_database()
-    f8data.API_KEY = f8db.read_api_key()
+    fast8tube_sql.check_database()
+    fast8tube_data.API_KEY, fast8tube_data.THEME = fast8tube_sql.read_settings()
+    page.theme_mode = ft.ThemeMode.DARK if fast8tube_data.THEME else ft.ThemeMode.LIGHT
+
+    def change_theme(e):
+        page.theme_mode = ft.ThemeMode.DARK if page.theme_mode == ft.ThemeMode.LIGHT else ft.ThemeMode.LIGHT
+        page.update()
+
+    current_channel = None
 
     api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
-    api_key_field.value = f8data.API_KEY
+    api_key_field.value = fast8tube_data.API_KEY
+
     channel_id_field = ft.TextField(label='id канала')
 
     def close_dialog_settings(e):
@@ -51,59 +66,47 @@ def main_window(page: ft.Page):
         page.update()
 
     def save_close_dialog_settings(e):
-        f8db.save_api_key(api_key_field.value)
+        fast8tube_sql.save_settings(api_key_field.value, page.theme_mode == ft.ThemeMode.DARK)
         close_dialog_settings(e)
 
-    dialog_settings = ft.AlertDialog(
-        modal=True,
-        title=ft.Text('Настройки', width=400),
-        content=api_key_field,
-        actions=[
-            ft.TextButton("Сохранить", on_click=save_close_dialog_settings),
-            ft.TextButton("Закрыть", on_click=close_dialog_settings)
-        ]
-    )
+    dialog_settings = dialog('Настройки', api_key_field, [
+        ft.IconButton(icon=ft.icons.SUNNY, on_click=change_theme),
+        ft.TextButton("Сохранить", on_click=save_close_dialog_settings),
+        ft.TextButton("Закрыть", on_click=close_dialog_settings)])
 
-    def close_dialog_add_channel(e):
-        dialog_add_channel.open = False
+    def close_dialog_edit_channel(e):
+        dialog_edit_channel.open = False
         page.update()
 
-    def save_close_dialog_add_channel(e):
-        if len(channel_id_field.value) > 1:
-            channel = f8data.Channel(channel_id_field.value)
-            channel.read()
-            channel.download_info()
-            channel.write()
-        close_dialog_add_channel(e)
+    def save_close_dialog_edit_channel(e):
+        current_channel.write()
+        close_dialog_edit_channel(e)
 
-    dialog_add_channel = ft.AlertDialog(
-        modal=True,
-        title=ft.Text('Youtube-канал', width=400),
-        content=ft.Column([
-            channel_id_field,
-            ft.Checkbox(label='Смотреть новое'),
-            ft.Checkbox(label='Смотреть с начала')
-        ]
-        ),
-        actions=[
-            ft.TextButton("Сохранить", on_click=save_close_dialog_add_channel),
-            ft.TextButton("Закрыть", on_click=close_dialog_add_channel)
-        ]
-    )
+    edit_channel_content = ft.Column([
+        channel_id_field,
+        ft.Checkbox(label='Смотреть новое'),
+        ft.Checkbox(label='Смотреть с начала')])
+
+    dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
+        ft.TextButton("Сохранить", on_click=save_close_dialog_edit_channel),
+        ft.TextButton("Закрыть", on_click=close_dialog_edit_channel)])
 
     def update_videos(e):
-        channel_id = e.control.data
-        if len(channel_id) > 3:
-            f8con.download_videos_list(api_key_field.value, channel_id)
+        current_channel = e.control.data
+        fast8tube_connect.download_videos_list(api_key_field.value, current_channel)
 
     def open_settings(e):
         page.dialog = dialog_settings
         dialog_settings.open = True
         page.update()
 
-    def open_channel_add(e):
-        page.dialog = dialog_add_channel
-        dialog_add_channel.open = True
+    def edit_channel(e):
+        current_channel = e.control.data
+        current_channel.read()
+        current_channel.download_info()
+        channel_id_field.value = current_channel.channel_id
+        page.dialog = dialog_edit_channel
+        dialog_edit_channel.open = True
         page.update()
 
     main_column = ft.Column(expand=True, height=page.height)
@@ -137,11 +140,12 @@ def main_window(page: ft.Page):
     channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=page.height - 100)
     slide_column.controls.append(channels_list)
 
-    fill_channels(channels_list, update_videos)
+    fill_channels(channels_list, update_videos, edit_channel)
     fill_videos(videos_list)
 
-    categories = f8db.read_categories()
-    for category in categories:
+    categories = Categories()
+    categories.read()
+    for category in categories.list:
         pass
 
     def page_resize(e):
