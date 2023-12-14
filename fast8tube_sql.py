@@ -1,5 +1,5 @@
 import sqlite3
-import fast8tube_data as f8data
+import fast8tube_data
 
 DATABASE_NAME = 'fast8tubebox.db'
 
@@ -146,7 +146,7 @@ def read_categories():
 
     categories = []
     for sample in result:
-        category = f8data.Category()
+        category = fast8tube_data.Category()
         category.id = sample[0]
         category.name = sample[1]
         categories.append(category)
@@ -160,7 +160,7 @@ def read_videos_list():
 
     videos = []
     for sample in result:
-        video = f8data.Video()
+        video = fast8tube_data.Video()
         video.video_id = sample[0]
         video.title = sample[1]
         video.channel_id = sample[2]
