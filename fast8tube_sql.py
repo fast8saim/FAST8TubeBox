@@ -33,7 +33,7 @@ class Query:
         return result
 
     def close_connection(self):
-        if not self.connection is None:
+        if self.connection:
             self.connection.close()
 
 
