@@ -1,9 +1,7 @@
 from googleapiclient.discovery import build
-import fast8tube_sql as f8db
 
 
 def download_channel_info(api_key, channel):
-
     service = build('youtube', 'v3', developerKey=api_key)
     r = service.channels().list(id=channel.channel_id, part='snippet,contentDetails,statistics').execute()
     item = r['items'][0]
@@ -31,9 +29,14 @@ def download_videos_list(api_key, channel):
     }
 
     r = service.playlistItems().list(**args).execute()
+
+    data = []
     for item in r['items']:
         snippet = item['snippet']
-        f8db.add_video(channel_id, snippet['resourceId']['videoId'], snippet['title'], snippet['publishedAt'])
-
-        # 'type': snpt['resourceId']['kind'],
-        # 'publishedAt': snpt['publishedAt'],
+        data.append({
+            'channel_id': channel_id,
+            'video_id': snippet['resourceId']['videoId'],
+            'title': snippet['title'],
+            'published_at': snippet['publishedAt']
+        })
+    return data

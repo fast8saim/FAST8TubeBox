@@ -1,6 +1,5 @@
 import flet as ft
 import fast8tube_sql
-import fast8tube_connect
 import fast8tube_data
 from fast8tube_data import Channel, Channels, Categories, Videos
 
@@ -47,7 +46,6 @@ def main_window(page: ft.Page):
     page.window_title_bar_hidden = True
 
     fast8tube_sql.check_database()
-    fast8tube_data.API_KEY, fast8tube_data.THEME = fast8tube_sql.read_settings()
     page.theme_mode = ft.ThemeMode.DARK if fast8tube_data.THEME else ft.ThemeMode.LIGHT
 
     def change_theme(e):
@@ -93,7 +91,7 @@ def main_window(page: ft.Page):
 
     def update_videos(e):
         current_channel = e.control.data
-        fast8tube_connect.download_videos_list(api_key_field.value, current_channel)
+        current_channel.download_videos_list()
 
     def open_settings(e):
         page.dialog = dialog_settings

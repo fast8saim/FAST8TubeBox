@@ -1,8 +1,7 @@
 import fast8tube_sql
 import fast8tube_connect
 
-API_KEY = ''
-THEME = ''
+API_KEY, THEME = fast8tube_sql.read_settings()
 
 
 class Channel:
@@ -40,6 +39,18 @@ class Channel:
 
     def download_info(self):
         fast8tube_connect.download_channel_info(API_KEY, self)
+
+    def download_videos_list(self):
+        data = fast8tube_connect.download_videos_list(API_KEY, self)
+        for sample in data:
+            video = Video(sample['video_id'])
+            video.read()
+            video.fill((
+                sample['channel_id'],
+                sample['video_id'],
+                sample['title'],
+                sample['published_at']))
+            video.write()
 
 
 class Channels:
