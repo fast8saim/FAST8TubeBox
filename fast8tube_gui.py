@@ -24,13 +24,26 @@ def fill_channels(channels_list, update_videos, edit_channel):
                 trailing=ft.PopupMenuButton(
                     icon=ft.icons.MORE_VERT,
                     items=[
-                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=edit_channel, data=channel),
+                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=edit_channel,
+                                         data=channel),
                         ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos, data=channel),
                         ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)
                     ]
                 )
             )
         )
+
+
+def fill_categories(categories_list):
+    categories = Categories()
+    categories.read()
+    for category in categories.list:
+        categories_list.controls.append(
+                ft.ListTile(
+                    title=ft.Text(category.title),
+                    leading=ft.Icon(ft.icons.ACCOUNT_BALANCE_WALLET_SHARP)
+                    )
+                )
 
 
 def dialog(title, content, actions):
@@ -119,6 +132,15 @@ def main_window(page: ft.Page):
     videos_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=False, height=page.height)
     main_column.controls.append(videos_list)
 
+    def tabs_changed(e):
+        if e.control.selected_index == 0:
+            slide_column.controls.append(channels_list)
+            slide_column.controls.remove(categories_list)
+        else:
+            slide_column.controls.remove(channels_list)
+            slide_column.controls.append(categories_list)
+        page.update()
+
     slide_column.controls.append(
         ft.Row([
             ft.WindowDragArea(
@@ -131,20 +153,19 @@ def main_window(page: ft.Page):
     slide_column.controls.append(
         ft.Tabs(
             selected_index=0,
-            #on_change=tabs_changed,
+            on_change=tabs_changed,
             tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")]
         )
     )
-    channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=page.height - 100)
+    channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
+                                height=page.height - 100)
+    categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
+                                  height=page.height - 100)
     slide_column.controls.append(channels_list)
 
     fill_channels(channels_list, update_videos, edit_channel)
+    fill_categories(categories_list)
     fill_videos(videos_list)
-
-    categories = Categories()
-    categories.read()
-    for category in categories.list:
-        pass
 
     def page_resize(e):
         main_column.height = page.window_height
