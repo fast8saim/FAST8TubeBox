@@ -49,7 +49,11 @@ class Channel:
                 sample['channel_id'],
                 sample['video_id'],
                 sample['title'],
-                sample['published_at']))
+                sample['published_at'],
+                sample['duration'],
+                sample['view_count'],
+                sample['like_count'],
+                sample['comment_count']))
             video.write()
 
 
@@ -101,6 +105,10 @@ class Video:
     title = ''
     channel_id = ''
     published_at = ''
+    duration = ''
+    view_count = 0
+    like_count = 0
+    comment_count = 0
 
     def __init__(self, video_id=''):
         self.video_id = video_id
@@ -115,6 +123,10 @@ class Video:
         self.title = sample[1]
         self.channel_id = sample[2]
         self.published_at = sample[3]
+        self.duration = sample[4]
+        self.view_count = sample[5]
+        self.like_count = sample[6]
+        self.comment_count = sample[7]
 
     def write(self):
         fast8tube_sql.update_video(self)

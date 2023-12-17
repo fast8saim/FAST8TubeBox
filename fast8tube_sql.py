@@ -61,7 +61,11 @@ def check_database():
         video_id TEXT NOT NULL PRIMARY KEY,
         channel_id TEXT NOT NULL,
         title TEXT NOT NULL,
-        published_at timestamp NOT NULL)'''
+        published_at timestamp NOT NULL,
+        duration TEXT NOT NULL,
+        view_count INTEGER NOT NULL,
+        like_count INTEGER NOT NULL,
+        comment_count INTEGER NOT NULL)'''
     query.update()
     query.text = 'CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)'
     query.update()
@@ -162,16 +166,19 @@ def read_category(category_id=None):
 def update_video(video):
     query = Query(text='SELECT video_id FROM videos WHERE video_id = ?', parameters=(video.video_id,))
     if len(query.select()) == 0:
-        query.text = 'INSERT INTO videos (title, channel_id, published_at, video_id) VALUES (?, ?, ?, ?)'
+        query.text = 'INSERT INTO videos (title, channel_id, published_at, duration, view_count, like_count, comment_count, video_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     else:
-        query.text = 'UPDATE videos SET title = ?, channel_id = ?, published_at = ? WHERE video_id = ?'
+        query.text = 'UPDATE videos SET title = ?, channel_id = ?, published_at = ?, duration = ?, view_count = ?, like_count = ?, comment_count = ? WHERE video_id = ?'
 
     query.parameters = (
         video.title,
         video.channel_id,
         video.published_at,
-        video.video_id
-    )
+        video.duration,
+        video.view_count,
+        video.like_count,
+        video.comment_count,
+        video.video_id)
     query.update(True)
 
 
@@ -185,6 +192,6 @@ def read_video(video_id=None):
         condition = 'WHERE video_id = ?'
         parameters = (video_id,)
 
-    query.text = f'SELECT video_id, title, channel_id, published_at FROM videos {condition} LIMIT 100'
+    query.text = f'SELECT video_id, title, channel_id, published_at, duration, view_count, like_count, comment_count FROM videos {condition} LIMIT 100'
     query.parameters = parameters
     return query.select(True)
