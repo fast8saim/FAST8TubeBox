@@ -93,10 +93,25 @@ def main_window(page: ft.Page):
         current_channel.write()
         close_dialog_edit_channel(e)
 
-    edit_channel_content = ft.Column([
-        channel_id_field,
-        ft.Checkbox(label='Смотреть новое'),
-        ft.Checkbox(label='Смотреть с начала')])
+    channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
+                                height=page.height - 100)
+    categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
+                                  height=page.height - 100)
+
+    edit_channel_content = ft.Row(
+        [
+            ft.Column([
+                channel_id_field,
+                ft.TextField(label='title'),
+                ft.TextField(label='description'),
+                ft.TextField(label='subscribers'),
+                ft.Checkbox(label='Смотреть новое'),
+                ft.Checkbox(label='Смотреть с начала'),
+                ft.Checkbox(label='Нужен перевод'),
+                ft.TextField(label='Дата добавления'),
+                ft.TextField(label='uploads_id')]),
+            categories_list
+        ])
 
     dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
         ft.TextButton("Сохранить", on_click=save_close_dialog_edit_channel),
@@ -157,10 +172,6 @@ def main_window(page: ft.Page):
             tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")]
         )
     )
-    channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
-                                height=page.height - 100)
-    categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
-                                  height=page.height - 100)
     slide_column.controls.append(channels_list)
 
     fill_channels(channels_list, update_videos, edit_channel)
