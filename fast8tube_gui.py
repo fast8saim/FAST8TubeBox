@@ -102,14 +102,14 @@ def main_window(page: ft.Page):
         [
             ft.Column([
                 channel_id_field,
-                ft.TextField(label='title'),
-                ft.TextField(label='description'),
-                ft.TextField(label='subscribers'),
+                ft.TextField(label='Заголовок', disabled=True),
+                ft.TextField(label='Описание', disabled=True),
+                ft.TextField(label='Подписчиков', disabled=True),
+                ft.TextField(label='Дата добавления', disabled=True),
+                ft.TextField(label='uploads_id', disabled=True),
                 ft.Checkbox(label='Смотреть новое'),
                 ft.Checkbox(label='Смотреть с начала'),
-                ft.Checkbox(label='Нужен перевод'),
-                ft.TextField(label='Дата добавления'),
-                ft.TextField(label='uploads_id')]),
+                ft.Checkbox(label='Нужен перевод')]),
             categories_list
         ])
 
