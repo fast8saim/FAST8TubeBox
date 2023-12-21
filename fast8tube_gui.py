@@ -4,6 +4,49 @@ import fast8tube_data
 from fast8tube_data import Channel, Channels, Categories, Videos
 
 
+class ChannelForm(ft.UserControl):
+    page = None
+    channel = None
+
+    def close_dialog_edit_channel(self, e):
+        self.controls.open = False
+        self.page.update()
+
+    def save_close_dialog_edit_channel(self, e):
+        self.channel.write()
+        self.close_dialog_edit_channel(e)
+
+    def __init__(self, page: ft.Page, channel: Channel):
+        super().__init__()
+        self.page = page
+        self.channel = channel
+        self.controls = self.build()
+
+    def build(self):
+        edit_channel_content = ft.Row(
+            [
+                ft.Column([
+                    #channel_id_field,
+                    ft.TextField(label='Заголовок', disabled=True),
+                    ft.TextField(label='Описание', disabled=True),
+                    ft.TextField(label='Подписчиков', disabled=True),
+                    ft.TextField(label='Дата добавления', disabled=True),
+                    ft.TextField(label='uploads_id', disabled=True),
+                    ft.Checkbox(label='Смотреть новое'),
+                    ft.Checkbox(label='Смотреть с начала'),
+                    ft.Checkbox(label='Нужен перевод')]),
+                #categories_list
+            ])
+
+        dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
+            ft.TextButton("Сохранить", on_click=self.save_close_dialog_edit_channel),
+            ft.TextButton("Закрыть", on_click=self.close_dialog_edit_channel)])
+        self.page.dialog = dialog_edit_channel
+        dialog_edit_channel.open = True
+
+        return dialog_edit_channel
+
+
 def fill_videos(videos_list):
     videos = Videos()
     videos.read()
@@ -65,8 +108,6 @@ def main_window(page: ft.Page):
         page.theme_mode = ft.ThemeMode.DARK if page.theme_mode == ft.ThemeMode.LIGHT else ft.ThemeMode.LIGHT
         page.update()
 
-    current_channel = None
-
     api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
     api_key_field.value = fast8tube_data.API_KEY
 
@@ -85,37 +126,10 @@ def main_window(page: ft.Page):
         ft.TextButton("Сохранить", on_click=save_close_dialog_settings),
         ft.TextButton("Закрыть", on_click=close_dialog_settings)])
 
-    def close_dialog_edit_channel(e):
-        dialog_edit_channel.open = False
-        page.update()
-
-    def save_close_dialog_edit_channel(e):
-        current_channel.write()
-        close_dialog_edit_channel(e)
-
     channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
                                 height=page.height - 100)
     categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
                                   height=page.height - 100)
-
-    edit_channel_content = ft.Row(
-        [
-            ft.Column([
-                channel_id_field,
-                ft.TextField(label='Заголовок', disabled=True),
-                ft.TextField(label='Описание', disabled=True),
-                ft.TextField(label='Подписчиков', disabled=True),
-                ft.TextField(label='Дата добавления', disabled=True),
-                ft.TextField(label='uploads_id', disabled=True),
-                ft.Checkbox(label='Смотреть новое'),
-                ft.Checkbox(label='Смотреть с начала'),
-                ft.Checkbox(label='Нужен перевод')]),
-            categories_list
-        ])
-
-    dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
-        ft.TextButton("Сохранить", on_click=save_close_dialog_edit_channel),
-        ft.TextButton("Закрыть", on_click=close_dialog_edit_channel)])
 
     def update_videos(e):
         current_channel = e.control.data
@@ -128,11 +142,7 @@ def main_window(page: ft.Page):
 
     def edit_channel(e):
         current_channel = e.control.data
-        current_channel.read()
-        current_channel.download_info()
-        channel_id_field.value = current_channel.channel_id
-        page.dialog = dialog_edit_channel
-        dialog_edit_channel.open = True
+        channel_form = ChannelForm(page, current_channel)
         page.update()
 
     main_column = ft.Column(expand=True, height=page.height)
