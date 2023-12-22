@@ -21,22 +21,25 @@ class ChannelForm(ft.UserControl):
         self.page = page
         self.channel = channel
         self.controls = self.build()
+        self.page.update()
 
     def build(self):
+        channel_id_field = ft.TextField(label='id канала', width=500)
+        channel_id_field.value = self.channel.channel_id
         edit_channel_content = ft.Row(
             [
                 ft.Column([
-                    #channel_id_field,
-                    ft.TextField(label='Заголовок', disabled=True),
-                    ft.TextField(label='Описание', disabled=True),
-                    ft.TextField(label='Подписчиков', disabled=True),
-                    ft.TextField(label='Дата добавления', disabled=True),
-                    ft.TextField(label='uploads_id', disabled=True),
-                    ft.Checkbox(label='Смотреть новое'),
-                    ft.Checkbox(label='Смотреть с начала'),
-                    ft.Checkbox(label='Нужен перевод')]),
+                    channel_id_field,
+                    ft.TextField(label='Заголовок', disabled=True, value=self.channel.title, width=500),
+                    ft.TextField(label='Описание', disabled=True, value=self.channel.description, width=500),
+                    ft.TextField(label='Подписчиков', disabled=True, value=self.channel.subscribers, width=500),
+                    ft.TextField(label='Дата добавления', disabled=True, value=self.channel.add_date, width=500),
+                    ft.TextField(label='uploads_id', disabled=True, value=self.channel.uploads_id, width=500),
+                    ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500),
+                    ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500),
+                    ft.Checkbox(label='Нужен перевод', value=self.channel.need_translate, width=500)]),
                 #categories_list
-            ])
+            ], width=800)
 
         dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
             ft.TextButton("Сохранить", on_click=self.save_close_dialog_edit_channel),
@@ -111,8 +114,6 @@ def main_window(page: ft.Page):
     api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
     api_key_field.value = fast8tube_data.API_KEY
 
-    channel_id_field = ft.TextField(label='id канала')
-
     def close_dialog_settings(e):
         dialog_settings.open = False
         page.update()
@@ -141,9 +142,7 @@ def main_window(page: ft.Page):
         page.update()
 
     def edit_channel(e):
-        current_channel = e.control.data
-        channel_form = ChannelForm(page, current_channel)
-        page.update()
+        ChannelForm(page, e.control.data)
 
     main_column = ft.Column(expand=True, height=page.height)
     slide_column = ft.Column(expand=False, auto_scroll=False, width=400, height=page.height)
