@@ -74,6 +74,11 @@ def check_database():
         category_id INTEGER NOT NULL PRIMARY KEY,
         title TEXT NOT NULL)'''
     query.update()
+    query.text = '''
+        CREATE TABLE IF NOT EXISTS video_categories (
+        video_id TEXT NOT NULL,
+        category_id INTEGER NOT NULL)'''
+    query.update()
 
     query.close_connection()
 
@@ -133,6 +138,11 @@ def read_channel(channel_id=None):
 
     query.text = f'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id FROM channels {condition} ORDER BY title'
     query.parameters = parameters
+    return query.select(True)
+
+
+def read_channel_category(channel_id):
+    query = Query(text='SELECT category_id FROM video_categories WHERE channel_id = ?', parameters=(channel_id,))
     return query.select(True)
 
 

@@ -14,6 +14,7 @@ class Channel:
     need_translate = False
     add_date = ''
     uploads_id = ''
+    categories = []
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -22,6 +23,9 @@ class Channel:
         result = fast8tube_sql.read_channel(self.channel_id)
         for sample in result:
             self.fill(sample)
+        result = fast8tube_sql.read_channel_category(self.channel_id)
+        for sample in result:
+            self.categories.append(sample[0])
 
     def fill(self, sample):
         self.channel_id = sample[0]

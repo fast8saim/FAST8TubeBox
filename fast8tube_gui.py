@@ -26,6 +26,9 @@ class ChannelForm(ft.UserControl):
     def build(self):
         channel_id_field = ft.TextField(label='id канала', width=500)
         channel_id_field.value = self.channel.channel_id
+        if channel_id_field.value:
+            channel_id_field.disabled = True
+        categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 500)
         edit_channel_content = ft.Row(
             [
                 ft.Column([
@@ -38,7 +41,7 @@ class ChannelForm(ft.UserControl):
                     ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500),
                     ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500),
                     ft.Checkbox(label='Нужен перевод', value=self.channel.need_translate, width=500)]),
-                #categories_list
+                categories_list
             ], width=800)
 
         dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
