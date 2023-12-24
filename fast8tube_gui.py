@@ -14,6 +14,7 @@ class ChannelForm(ft.UserControl):
 
     def save_close_dialog_edit_channel(self, e):
         self.channel.write()
+        self.channel.write_categories()
         self.close_dialog_edit_channel(e)
 
     def __init__(self, page: ft.Page, channel: Channel):

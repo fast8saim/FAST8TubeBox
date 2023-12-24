@@ -41,6 +41,9 @@ class Channel:
     def write(self):
         fast8tube_sql.update_channel(self)
 
+    def write_categories(self):
+        fast8tube_sql.update_channel_category(self)
+
     def download_info(self):
         fast8tube_connect.download_channel_info(API_KEY, self)
 

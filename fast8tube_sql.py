@@ -76,7 +76,7 @@ def check_database():
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS video_categories (
-        video_id TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
         category_id INTEGER NOT NULL)'''
     query.update()
 
@@ -144,6 +144,17 @@ def read_channel(channel_id=None):
 def read_channel_category(channel_id):
     query = Query(text='SELECT category_id FROM video_categories WHERE channel_id = ?', parameters=(channel_id,))
     return query.select(True)
+
+
+def update_channel_category(channel):
+    query = Query(text='DELETE FROM video_categories WHERE channel_id = ?', parameters=(channel.channel_id,))
+    query.update()
+    for category in channel.categories:
+        query.text = 'INSERT INTO video_categories (channel_id, category_id) VALUES (?, ?)'
+        query.parameters = (channel.channel_id, category)
+        query.update()
+
+    query.close_connection()
 
 
 def update_category(category):
