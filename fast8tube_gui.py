@@ -34,6 +34,13 @@ class ChannelForm(ft.UserControl):
         self.page = page
         self.channel = channel
         self.controls = self.build()
+        for category in self.channel.categories:
+            values = self.channel.categories.get(category)
+            self.categories_list.controls.append(
+                ft.Row([
+                    ft.Checkbox(label=values['title'], value=values['use'], data={'id': category, 'title': values['title'], 'use': values['use']})
+                ])
+            )
         self.page.update()
 
     def build(self):
@@ -43,14 +50,6 @@ class ChannelForm(ft.UserControl):
             channel_id_field.disabled = True
         self.channel.read()
         self.categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height)
-        for category in self.channel.categories:
-            values = self.channel.categories.get(category)
-            self.categories_list.controls.append(
-                ft.Row([
-                    ft.Checkbox(label=values['title'], value=values['use'], data={'id': category, 'title': values['title'], 'use': values['use']})
-                ])
-            )
-
         self.checkbox_from_new = ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500)
         self.checkbox_from_begin = ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500)
         self.checkbox_need_translate = ft.Checkbox(label='Нужен перевод', value=self.channel.need_translate, width=500)

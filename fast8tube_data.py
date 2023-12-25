@@ -23,6 +23,7 @@ class Channel:
         result = fast8tube_sql.read_channel(self.channel_id)
         for sample in result:
             self.fill(sample)
+        self.categories.clear()
         result = fast8tube_sql.read_channel_category(self.channel_id)
         for sample in result:
             if sample[2] == 1:
