@@ -36,9 +36,9 @@ class Channel:
         self.title = sample[1]
         self.description = sample[2]
         self.subscribers = sample[3]
-        self.from_begin = True if sample[4] else False
-        self.from_new = True if sample[5] else False
-        self.need_translate = True if sample[6] else False
+        self.from_begin = True if sample[4] == 1 else False
+        self.from_new = True if sample[5] == 1 else False
+        self.need_translate = True if sample[6] == 1 else False
         self.add_date = sample[7]
         self.uploads_id = sample[8]
 
