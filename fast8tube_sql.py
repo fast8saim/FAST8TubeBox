@@ -75,7 +75,7 @@ def check_database():
         title TEXT NOT NULL)'''
     query.update()
     query.text = '''
-        CREATE TABLE IF NOT EXISTS video_categories (
+        CREATE TABLE IF NOT EXISTS channel_categories (
         channel_id TEXT NOT NULL,
         category_id INTEGER NOT NULL)'''
     query.update()
@@ -116,9 +116,9 @@ def update_channel(channel):
         channel.title,
         channel.description,
         channel.subscribers,
-        channel.from_begin,
-        channel.from_new,
-        channel.need_translate,
+        1 if channel.from_begin else 0,
+        1 if channel.from_new else 0,
+        1 if channel.need_translate else 0,
         channel.add_date,
         channel.uploads_id,
         channel.channel_id
@@ -142,17 +142,35 @@ def read_channel(channel_id=None):
 
 
 def read_channel_category(channel_id):
-    query = Query(text='SELECT category_id FROM video_categories WHERE channel_id = ?', parameters=(channel_id,))
+    query = Query()
+    query.text = '''
+    SELECT
+        categories.category_id AS category_id,
+        categories.title AS title,
+        CASE
+            WHEN channel_categories.category_id IS NULL THEN
+                0
+            ELSE
+                1
+        END AS use
+        FROM categories
+            LEFT JOIN channel_categories
+            ON categories.category_id = channel_categories.category_id
+            AND channel_categories.channel_id = ?'''
+
+    query.parameters = (channel_id,)
     return query.select(True)
 
 
 def update_channel_category(channel):
-    query = Query(text='DELETE FROM video_categories WHERE channel_id = ?', parameters=(channel.channel_id,))
+    query = Query(text='DELETE FROM channel_categories WHERE channel_id = ?', parameters=(channel.channel_id,))
     query.update()
     for category in channel.categories:
-        query.text = 'INSERT INTO video_categories (channel_id, category_id) VALUES (?, ?)'
-        query.parameters = (channel.channel_id, category)
-        query.update()
+        values = channel.categories.get(category)
+        if values['use']:
+            query.text = 'INSERT INTO channel_categories (channel_id, category_id) VALUES (?, ?)'
+            query.parameters = (channel.channel_id, category)
+            query.update()
 
     query.close_connection()
 

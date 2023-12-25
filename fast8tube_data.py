@@ -14,7 +14,7 @@ class Channel:
     need_translate = False
     add_date = ''
     uploads_id = ''
-    categories = []
+    categories = {}
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -25,16 +25,20 @@ class Channel:
             self.fill(sample)
         result = fast8tube_sql.read_channel_category(self.channel_id)
         for sample in result:
-            self.categories.append(sample[0])
+            if sample[2] == 1:
+                use = True
+            else:
+                use = False
+            self.categories.setdefault(sample[0], {'title': sample[1], 'use': use})
 
     def fill(self, sample):
         self.channel_id = sample[0]
         self.title = sample[1]
         self.description = sample[2]
         self.subscribers = sample[3]
-        self.from_begin = sample[4]
-        self.from_new = sample[5]
-        self.need_translate = sample[6]
+        self.from_begin = True if sample[4] else False
+        self.from_new = True if sample[5] else False
+        self.need_translate = True if sample[6] else False
         self.add_date = sample[7]
         self.uploads_id = sample[8]
 

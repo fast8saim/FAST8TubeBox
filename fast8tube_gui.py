@@ -7,12 +7,26 @@ from fast8tube_data import Channel, Channels, Categories, Videos
 class ChannelForm(ft.UserControl):
     page = None
     channel = None
+    categories_list = None
+    checkbox_from_new = None
+    checkbox_from_begin = None
+    checkbox_need_translate = None
 
     def close_dialog_edit_channel(self, e):
         self.controls.open = False
         self.page.update()
 
     def save_close_dialog_edit_channel(self, e):
+        for i in self.categories_list.controls:
+            checkbox = i.controls[0]
+            self.channel.categories[checkbox.data['id']]['use'] = checkbox.value
+
+        print(self.channel.from_new)
+        self.channel.from_new = self.checkbox_from_new.value
+        self.channel.from_begin = self.checkbox_from_begin.value
+        self.channel.need_translate = self.checkbox_need_translate.value
+        print(self.channel.from_new)
+
         self.channel.write()
         self.channel.write_categories()
         self.close_dialog_edit_channel(e)
@@ -29,7 +43,20 @@ class ChannelForm(ft.UserControl):
         channel_id_field.value = self.channel.channel_id
         if channel_id_field.value:
             channel_id_field.disabled = True
-        categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 500)
+        self.channel.read()
+        self.categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height)
+        for category in self.channel.categories:
+            values = self.channel.categories.get(category)
+            self.categories_list.controls.append(
+                ft.Row([
+                    ft.Checkbox(label=values['title'], value=values['use'], data={'id': category, 'title': values['title'], 'use': values['use']})
+                ])
+            )
+
+        self.checkbox_from_new = ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500)
+        self.checkbox_from_begin = ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500)
+        self.checkbox_need_translate = ft.Checkbox(label='Нужен перевод', value=self.channel.need_translate, width=500)
+
         edit_channel_content = ft.Row(
             [
                 ft.Column([
@@ -39,10 +66,10 @@ class ChannelForm(ft.UserControl):
                     ft.TextField(label='Подписчиков', disabled=True, value=self.channel.subscribers, width=500),
                     ft.TextField(label='Дата добавления', disabled=True, value=self.channel.add_date, width=500),
                     ft.TextField(label='uploads_id', disabled=True, value=self.channel.uploads_id, width=500),
-                    ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500),
-                    ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500),
-                    ft.Checkbox(label='Нужен перевод', value=self.channel.need_translate, width=500)]),
-                categories_list
+                    self.checkbox_from_new,
+                    self.checkbox_from_begin,
+                    self.checkbox_need_translate]),
+                self.categories_list
             ], width=800)
 
         dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
