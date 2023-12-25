@@ -9,7 +9,7 @@ class Query:
     connection = None
 
     def __init__(self, text='', parameters=()):
-        self.connection = sqlite3.connect(DATABASE_NAME)
+        self.connection = sqlite3.connect(DATABASE_NAME, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self.text = text
         self.parameters = parameters
 

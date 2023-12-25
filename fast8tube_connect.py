@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+import datetime
 
 
 def download_channel_info(api_key, channel):
@@ -41,7 +42,7 @@ def download_videos_list(api_key, channel):
             'channel_id': channel_id,
             'video_id': item['id'],
             'title': item['snippet']['title'],
-            'published_at': item['snippet']['publishedAt'],
+            'published_at': datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
             'duration': item['contentDetails']['duration'],
             'view_count': item['statistics']['viewCount'],
             'like_count': item['statistics']['likeCount'],

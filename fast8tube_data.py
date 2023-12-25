@@ -1,5 +1,6 @@
 import fast8tube_sql
 import fast8tube_connect
+import datetime
 
 API_KEY, THEME = fast8tube_sql.read_settings()
 
@@ -44,6 +45,8 @@ class Channel:
         self.uploads_id = sample[8]
 
     def write(self):
+        if not self.add_date:
+            self.add_date = datetime.datetime.now()
         fast8tube_sql.update_channel(self)
 
     def write_categories(self):

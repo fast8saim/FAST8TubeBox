@@ -58,18 +58,19 @@ class ChannelForm(ft.UserControl):
             [
                 ft.Column([
                     channel_id_field,
-                    ft.TextField(label='Заголовок', disabled=True, value=self.channel.title, width=500),
-                    ft.TextField(label='Описание', disabled=True, value=self.channel.description, width=500),
+                    ft.Text(expand=True, value=self.channel.description, width=500),
                     ft.TextField(label='Подписчиков', disabled=True, value=self.channel.subscribers, width=500),
                     ft.TextField(label='Дата добавления', disabled=True, value=self.channel.add_date, width=500),
-                    ft.TextField(label='uploads_id', disabled=True, value=self.channel.uploads_id, width=500),
                     self.checkbox_from_new,
                     self.checkbox_from_begin,
                     self.checkbox_need_translate]),
-                self.categories_list
+                ft.Column([
+                    ft.Text(value='Категории:'),
+                    self.categories_list
+                    ])
             ], width=800)
 
-        dialog_edit_channel = dialog('Youtube-канал', edit_channel_content, [
+        dialog_edit_channel = dialog(f'Youtube-канал {self.channel.title}', edit_channel_content, [
             ft.TextButton("Сохранить", on_click=self.save_close_dialog_edit_channel),
             ft.TextButton("Закрыть", on_click=self.close_dialog_edit_channel)])
         self.page.dialog = dialog_edit_channel
