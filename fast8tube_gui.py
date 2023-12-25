@@ -21,11 +21,9 @@ class ChannelForm(ft.UserControl):
             checkbox = i.controls[0]
             self.channel.categories[checkbox.data['id']]['use'] = checkbox.value
 
-        print(self.channel.from_new)
         self.channel.from_new = self.checkbox_from_new.value
         self.channel.from_begin = self.checkbox_from_begin.value
         self.channel.need_translate = self.checkbox_need_translate.value
-        print(self.channel.from_new)
 
         self.channel.write()
         self.channel.write_categories()
