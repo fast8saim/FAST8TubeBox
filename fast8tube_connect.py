@@ -37,16 +37,16 @@ def download_videos_list(api_key, channel):
     data = []
     r = service.videos().list(id=video_ids, part='snippet,contentDetails,statistics').execute()
     for item in r['items']:
-        snippet = item['snippet']
+        print(item['id'])
         data.append({
             'channel_id': channel_id,
-            'video_id': snippet['resourceId']['videoId'],
-            'title': snippet['title'],
-            'published_at': snippet['publishedAt'],
-            'duration': snippet['contentDetails']['duration'],
-            'view_count': snippet['statistics']['viewCount'],
-            'like_count': snippet['statistics']['likeCount'],
-            'comment_count': snippet['statistics']['commentCount']
+            'video_id': item['id'],
+            'title': item['snippet']['title'],
+            'published_at': item['snippet']['publishedAt'],
+            'duration': item['contentDetails']['duration'],
+            'view_count': item['statistics']['viewCount'],
+            'like_count': item['statistics']['likeCount'],
+            'comment_count': item['statistics']['commentCount']
         })
 
     return data

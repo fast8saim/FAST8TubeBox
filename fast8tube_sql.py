@@ -231,6 +231,6 @@ def read_video(video_id=None):
         condition = 'WHERE video_id = ?'
         parameters = (video_id,)
 
-    query.text = f'SELECT video_id, title, channel_id, published_at, duration, view_count, like_count, comment_count FROM videos {condition} LIMIT 100'
+    query.text = f'SELECT video_id, channel_id, title, published_at, duration, view_count, like_count, comment_count FROM videos {condition} ORDER BY published_at DESC LIMIT 100'
     query.parameters = parameters
     return query.select(True)

@@ -57,8 +57,8 @@ class Channel:
             video = Video(sample['video_id'])
             video.read()
             video.fill((
-                sample['channel_id'],
                 sample['video_id'],
+                sample['channel_id'],
                 sample['title'],
                 sample['published_at'],
                 sample['duration'],
@@ -131,8 +131,8 @@ class Video:
 
     def fill(self, sample):
         self.video_id = sample[0]
-        self.title = sample[1]
-        self.channel_id = sample[2]
+        self.channel_id = sample[1]
+        self.title = sample[2]
         self.published_at = sample[3]
         self.duration = sample[4]
         self.view_count = sample[5]

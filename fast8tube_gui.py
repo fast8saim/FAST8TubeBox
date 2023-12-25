@@ -162,8 +162,10 @@ def main_window(page: ft.Page):
                                   height=page.height - 100)
 
     def update_videos(e):
-        current_channel = e.control.data
-        current_channel.download_videos_list()
+        channel = e.control.data
+        channel.download_info()
+        channel.write()
+        channel.download_videos_list()
 
     def open_settings(e):
         page.dialog = dialog_settings
