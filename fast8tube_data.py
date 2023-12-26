@@ -87,6 +87,7 @@ class Channels:
     list = []
 
     def read(self):
+        self.list.clear()
         result = fast8tube_sql.read_channel()
         for sample in result:
             channel = Channel(sample[0])
@@ -119,6 +120,7 @@ class Categories:
     list = []
 
     def read(self):
+        self.list.clear()
         result = fast8tube_sql.read_category()
         for sample in result:
             category = Category(sample[0])
