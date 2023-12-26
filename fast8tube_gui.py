@@ -126,7 +126,7 @@ def fill_categories(categories_list):
         categories_list.controls.append(
                 ft.ListTile(
                     title=ft.Text(category.title),
-                    leading=ft.Icon(ft.icons.ACCOUNT_BALANCE_WALLET_SHARP)
+                    leading=ft.Icon(ft.icons.LOCAL_PIZZA)
                     )
                 )
 
@@ -166,9 +166,9 @@ def main_window(page: ft.Page):
         ft.TextButton("Сохранить", on_click=save_close_dialog_settings),
         ft.TextButton("Закрыть", on_click=close_dialog_settings)])
 
-    channels_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
+    channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
                                 height=page.height - 100)
-    categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
+    categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
                                   height=page.height - 100)
 
     def mark_view(e):
