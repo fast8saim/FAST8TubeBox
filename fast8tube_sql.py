@@ -243,7 +243,7 @@ def read_video(video_id=None):
         condition = 'WHERE video_id = ?'
         parameters = (video_id,)
 
-    query.text = f'SELECT videos.video_id AS video_id, channel_id, title, published_at, duration, view_count, like_count, comment_count FROM videos {condition} ORDER BY published_at LIMIT 50'
+    query.text = f'SELECT videos.video_id AS video_id, videos.channel_id, videos.title, published_at, duration, view_count, like_count, comment_count FROM videos LEFT JOIN channels ON videos.channel_id = channels.channel_id {condition} ORDER BY channels.from_new DESC, published_at LIMIT 50'
     query.parameters = parameters
     return query.select(True)
 
