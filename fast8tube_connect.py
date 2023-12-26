@@ -29,24 +29,30 @@ def download_videos_list(api_key, channel):
         'maxResults': 50
     }
 
-    video_ids = []
-    r = service.playlistItems().list(**args).execute()
-    for item in r['items']:
-        snippet = item['snippet']
-        video_ids.append(snippet['resourceId']['videoId'])
-
     data = []
-    r = service.videos().list(id=video_ids, part='snippet,contentDetails,statistics').execute()
-    for item in r['items']:
-        data.append({
-            'channel_id': channel_id,
-            'video_id': item['id'],
-            'title': item['snippet']['title'],
-            'published_at': datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
-            'duration': item['contentDetails']['duration'],
-            'view_count': item['statistics']['viewCount'],
-            'like_count': item['statistics']['likeCount'],
-            'comment_count': item['statistics']['commentCount']
-        })
+    for _ in range(0, 500):
+        video_ids = []
+        r = service.playlistItems().list(**args).execute()
+        for item in r['items']:
+            snippet = item['snippet']
+            video_ids.append(snippet['resourceId']['videoId'])
+
+        args['pageToken'] = r.get('nextPageToken')
+
+        r = service.videos().list(id=video_ids, part='snippet,contentDetails,statistics').execute()
+        for item in r['items']:
+            data.append({
+                'channel_id': channel_id,
+                'video_id': item['id'],
+                'title': item['snippet']['title'],
+                'published_at': datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
+                'duration': item['contentDetails']['duration'],
+                'view_count': item['statistics']['viewCount'],
+                'like_count': item['statistics']['likeCount'],
+                'comment_count': item['statistics']['commentCount']
+            })
+
+        if not args['pageToken']:
+            break
 
     return data

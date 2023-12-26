@@ -11,36 +11,39 @@ class ChannelForm(ft.UserControl):
     checkbox_from_new = None
     checkbox_from_begin = None
     checkbox_need_translate = None
+    channels_list = None
 
     def close_dialog_edit_channel(self, e):
         self.controls.open = False
         self.page.update()
 
     def save_close_dialog_edit_channel(self, e):
-        for i in self.categories_list.controls:
-            checkbox = i.controls[0]
-            self.channel.categories[checkbox.data['id']]['use'] = checkbox.value
-
         self.channel.from_new = self.checkbox_from_new.value
         self.channel.from_begin = self.checkbox_from_begin.value
         self.channel.need_translate = self.checkbox_need_translate.value
 
         self.channel.write()
         self.channel.write_categories()
+
+        #fill_channels(self.channels_list, True)
+
         self.close_dialog_edit_channel(e)
 
-    def __init__(self, page: ft.Page, channel: Channel):
+    def mark_category(self, e):
+        self.channel.categories[e.control.data]['use'] = e.control.value
+
+    def __init__(self, page: ft.Page, channel: Channel, channels_list):
         super().__init__()
         self.page = page
         self.channel = channel
+        self.channels_list = channels_list
         self.controls = self.build()
         for category in self.channel.categories:
             values = self.channel.categories.get(category)
             self.categories_list.controls.append(
                 ft.Row([
-                    ft.Checkbox(label=values['title'], value=values['use'], data={'id': category, 'title': values['title'], 'use': values['use']})
-                ])
-            )
+                    ft.Checkbox(label=values['title'], value=values['use'], data=category, on_change=self.mark_category)
+                ]))
         self.page.update()
 
     def build(self):
@@ -49,7 +52,7 @@ class ChannelForm(ft.UserControl):
         if channel_id_field.value:
             channel_id_field.disabled = True
         self.channel.read()
-        self.categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height)
+        self.categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height)
         self.checkbox_from_new = ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500)
         self.checkbox_from_begin = ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500)
         self.checkbox_need_translate = ft.Checkbox(label='Нужен перевод', value=self.channel.need_translate, width=500)
@@ -66,8 +69,7 @@ class ChannelForm(ft.UserControl):
                     self.checkbox_need_translate]),
                 ft.Column([
                     ft.Text(value='Категории:'),
-                    self.categories_list
-                    ])
+                    self.categories_list])
             ], width=800)
 
         dialog_edit_channel = dialog(f'Youtube-канал {self.channel.title}', edit_channel_content, [
@@ -79,14 +81,26 @@ class ChannelForm(ft.UserControl):
         return dialog_edit_channel
 
 
-def fill_videos(videos_list):
+def fill_videos(videos_list, mark_view, mark_skip):
+    videos_list.controls.clear()
+
     videos = Videos()
     videos.read()
     for video in videos.list:
-        videos_list.controls.append(ft.Text(video.title))
+        videos_list.controls.append(
+            ft.ListTile(
+                title=ft.Text(video.title),
+                subtitle=ft.Text(video.channel.title),
+                trailing=ft.PopupMenuButton(
+                    icon=ft.icons.MORE_VERT,
+                    items=[
+                        ft.PopupMenuItem(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=mark_view),
+                        ft.PopupMenuItem(text="Пропустить", icon=ft.icons.REFRESH, data=video, on_click=mark_skip)])))
 
 
 def fill_channels(channels_list, update_videos, edit_channel):
+    channels_list.controls.clear()
+
     channels = Channels()
     channels.read()
 
@@ -94,19 +108,15 @@ def fill_channels(channels_list, update_videos, edit_channel):
         channels_list.controls.append(
             ft.ListTile(
                 title=ft.Text(channel.title),
-                subtitle=ft.Text(channel.channel_id),
+                subtitle=ft.Text(channel.categories_title),
                 leading=ft.Icon(ft.icons.ABC),
                 trailing=ft.PopupMenuButton(
                     icon=ft.icons.MORE_VERT,
                     items=[
-                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=edit_channel,
-                                         data=channel),
+                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=edit_channel, data=channel),
                         ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos, data=channel),
                         ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)
-                    ]
-                )
-            )
-        )
+                    ])))
 
 
 def fill_categories(categories_list):
@@ -161,11 +171,25 @@ def main_window(page: ft.Page):
     categories_list = ft.ListView(expand=False, spacing=5, padding=5, auto_scroll=False, width=400,
                                   height=page.height - 100)
 
+    def mark_view(e):
+        video = e.control.data
+        video.mark_view()
+        fill_videos(videos_list, mark_view, mark_skip)
+        page.update()
+
+    def mark_skip(e):
+        video = e.control.data
+        video.mark_skip()
+        fill_videos(videos_list, mark_view, mark_skip)
+        page.update()
+
     def update_videos(e):
         channel = e.control.data
         channel.download_info()
         channel.write()
         channel.download_videos_list()
+        fill_videos(videos_list, mark_view, mark_skip)
+        page.update()
 
     def open_settings(e):
         page.dialog = dialog_settings
@@ -173,7 +197,7 @@ def main_window(page: ft.Page):
         page.update()
 
     def edit_channel(e):
-        ChannelForm(page, e.control.data)
+        ChannelForm(page, e.control.data, channels_list)
 
     main_column = ft.Column(expand=True, height=page.height)
     slide_column = ft.Column(expand=False, auto_scroll=False, width=400, height=page.height)
@@ -216,7 +240,7 @@ def main_window(page: ft.Page):
 
     fill_channels(channels_list, update_videos, edit_channel)
     fill_categories(categories_list)
-    fill_videos(videos_list)
+    fill_videos(videos_list, mark_view, mark_skip)
 
     def page_resize(e):
         main_column.height = page.window_height

@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 
 DATABASE_NAME = 'fast8tubebox.db'
@@ -54,7 +55,8 @@ def check_database():
         from_new BOOLEAN NOT NULL,
         need_translate BOOLEAN NOT NULL,
         add_date timestamp NOT NULL,
-        uploads_id TEXT NOT NULL)'''
+        uploads_id TEXT NOT NULL,
+        categories_title TEXT NOT NULL)'''
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS videos (
@@ -78,6 +80,15 @@ def check_database():
         CREATE TABLE IF NOT EXISTS channel_categories (
         channel_id TEXT NOT NULL,
         category_id INTEGER NOT NULL)'''
+    query.update()
+    query.text = 'CREATE INDEX IF NOT EXISTS idx_channel_categories ON channel_categories (channel_id)'
+    query.update()
+    query.text = '''
+        CREATE TABLE IF NOT EXISTS history_videos (
+        video_id TEXT NOT NULL,
+        date timestamp NOT NULL,
+        view BOOLEAN NOT NULL,
+        skip BOOLEAN NOT NULL)'''
     query.update()
 
     query.close_connection()
@@ -108,9 +119,9 @@ def read_settings():
 def update_channel(channel):
     query = Query(text='SELECT channel_id FROM channels WHERE channel_id = ?', parameters=(channel.channel_id,))
     if len(query.select()) == 0:
-        query.text = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        query.text = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, categories_title, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     else:
-        query.text = 'UPDATE channels SET title = ?, description = ?, subscribers = ?, from_begin = ?, from_new = ?, need_translate = ?, add_date = ?, uploads_id = ? WHERE channel_id = ?'
+        query.text = 'UPDATE channels SET title = ?, description = ?, subscribers = ?, from_begin = ?, from_new = ?, need_translate = ?, add_date = ?, uploads_id = ?, categories_title =? WHERE channel_id = ?'
 
     query.parameters = (
         channel.title,
@@ -121,6 +132,7 @@ def update_channel(channel):
         1 if channel.need_translate else 0,
         channel.add_date,
         channel.uploads_id,
+        channel.categories_title,
         channel.channel_id
     )
     query.update(True)
@@ -136,7 +148,7 @@ def read_channel(channel_id=None):
         condition = 'WHERE channel_id = ?'
         parameters = (channel_id,)
 
-    query.text = f'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id FROM channels {condition} ORDER BY title'
+    query.text = f'SELECT channel_id, title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, categories_title FROM channels {condition} ORDER BY title'
     query.parameters = parameters
     return query.select(True)
 
@@ -225,12 +237,19 @@ def read_video(video_id=None):
     query = Query()
 
     if video_id is None:
-        condition = ''
+        condition = 'LEFT JOIN history_videos ON videos.video_id = history_videos.video_id WHERE history_videos.video_id IS NULL'
         parameters = ()
     else:
         condition = 'WHERE video_id = ?'
         parameters = (video_id,)
 
-    query.text = f'SELECT video_id, channel_id, title, published_at, duration, view_count, like_count, comment_count FROM videos {condition} ORDER BY published_at LIMIT 100'
+    query.text = f'SELECT videos.video_id AS video_id, channel_id, title, published_at, duration, view_count, like_count, comment_count FROM videos {condition} ORDER BY published_at LIMIT 50'
     query.parameters = parameters
     return query.select(True)
+
+
+def update_history_videos(video_id, view=False, skip=False):
+    query = Query()
+    query.text = 'INSERT INTO history_videos (video_id, date, view, skip) VALUES (?, ?, ?, ?)'
+    query.parameters = (video_id, datetime.datetime.now(), view, skip)
+    query.update(True)
