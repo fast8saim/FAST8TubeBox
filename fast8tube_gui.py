@@ -29,8 +29,7 @@ class ChannelForm(ft.UserControl):
         self.channel.write()
         self.channel.write_categories()
 
-        #fill_channels(self.channels_list, True)
-
+        self.channels_list.fill()
         self.close_dialog_edit_channel(e)
 
     def mark_category(self, e):
@@ -90,54 +89,116 @@ class ChannelForm(ft.UserControl):
         return dialog_edit_channel
 
 
-def fill_videos(videos_list, mark_view, mark_skip):
-    videos_list.controls.clear()
+class VideosList(ft.UserControl):
+    page = None
 
-    videos = Videos()
-    videos.read()
-    for video in videos.list:
-        videos_list.controls.append(
-            ft.ListTile(
-                title=ft.Text(video.title),
-                subtitle=ft.Text(video.channel.title),
-                trailing=ft.PopupMenuButton(
-                    icon=ft.icons.MORE_VERT,
-                    items=[
-                        ft.PopupMenuItem(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=mark_view),
-                        ft.PopupMenuItem(text="Пропустить", icon=ft.icons.REFRESH, data=video, on_click=mark_skip)])))
+    def mark_view(self, e):
+        video = e.control.data
+        video.mark_view()
+        self.fill()
+        self.page.update()
+
+    def mark_skip(self, e):
+        video = e.control.data
+        video.mark_skip()
+        self.fill()
+        self.page.update()
+
+    def fill(self):
+        self.controls.controls.clear()
+
+        videos = Videos()
+        videos.read()
+        for video in videos.list:
+            self.controls.controls.append(
+                ft.ListTile(
+                    title=ft.Text(video.title),
+                    subtitle=ft.Text(video.channel.title),
+                    trailing=ft.PopupMenuButton(
+                        icon=ft.icons.MORE_VERT,
+                        items=[
+                            ft.PopupMenuItem(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=self.mark_view),
+                            ft.PopupMenuItem(text="Пропустить", icon=ft.icons.REFRESH, data=video, on_click=self.mark_skip)])))
+
+    def __init__(self, page: ft.Page):
+        super().__init__()
+        self.page = page
+        self.controls = self.build()
+
+    def build(self):
+        videos_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=False, height=self.page.height)
+        return videos_list
 
 
-def fill_channels(channels_list, update_videos, edit_channel):
-    channels_list.controls.clear()
+class ChannelsList(ft.UserControl):
+    page = None
+    videos_list = None
 
-    channels = Channels()
-    channels.read()
+    def edit_channel(self, e):
+        ChannelForm(self.page, e.control.data, self)
 
-    for channel in channels.list:
-        channels_list.controls.append(
-            ft.ListTile(
-                title=ft.Text(channel.title),
-                subtitle=ft.Text(channel.categories_title),
-                leading=ft.Icon(ft.icons.ABC),
-                trailing=ft.PopupMenuButton(
-                    icon=ft.icons.MORE_VERT,
-                    items=[
-                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=edit_channel, data=channel),
-                        ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=update_videos, data=channel),
-                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)
-                    ])))
+    def update_videos(self, e):
+        channel = e.control.data
+        channel.download_info()
+        channel.write()
+        channel.download_videos_list()
+        self.videos_list.fill()
+        self.page.update()
+
+    def fill(self):
+        self.controls.controls.clear()
+
+        channels = Channels()
+        channels.read()
+
+        for channel in channels.list:
+            self.controls.controls.append(
+                ft.ListTile(
+                    title=ft.Text(channel.title),
+                    subtitle=ft.Text(channel.categories_title),
+                    leading=ft.Icon(ft.icons.ABC),
+                    trailing=ft.PopupMenuButton(
+                        icon=ft.icons.MORE_VERT,
+                        items=[
+                            ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
+                                             data=channel),
+                            ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=self.update_videos,
+                                             data=channel),
+                            ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)])))
+
+    def __init__(self, page: ft.Page, videos_list):
+        super().__init__()
+        self.page = page
+        self.videos_list = videos_list
+        self.controls = self.build()
+
+    def build(self):
+        channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
+                                    height=self.page.height - 200)
+
+        return channels_list
 
 
-def fill_categories(categories_list):
-    categories = Categories()
-    categories.read()
-    for category in categories.list:
-        categories_list.controls.append(
+class CategoriesList(ft.UserControl):
+    page = None
+
+    def fill(self):
+        categories = Categories()
+        categories.read()
+        for category in categories.list:
+            self.controls.controls.append(
                 ft.ListTile(
                     title=ft.Text(category.title),
-                    leading=ft.Icon(ft.icons.LOCAL_PIZZA)
-                    )
-                )
+                    leading=ft.Icon(ft.icons.LOCAL_PIZZA)))
+
+    def __init__(self, page: ft.Page):
+        super().__init__()
+        self.page = page
+        self.controls = self.build()
+
+    def build(self):
+        categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 100)
+        return categories_list
 
 
 def dialog(title, content, actions):
@@ -148,6 +209,40 @@ def dialog(title, content, actions):
         actions=actions)
 
 
+class SettingsDialog(ft.UserControl):
+    page = None
+    api_key_field = None
+
+    def change_theme(self, e):
+        self.page.theme_mode = ft.ThemeMode.DARK if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.ThemeMode.LIGHT
+        self.page.update()
+
+    def close_dialog_settings(self, e):
+        self.controls.open = False
+        self.page.update()
+
+    def save_close_dialog_settings(self, e):
+        fast8tube_sql.save_settings(self.api_key_field.value, self.page.theme_mode == ft.ThemeMode.DARK)
+        self.close_dialog_settings(e)
+
+    def __init__(self, page: ft.Page):
+        super().__init__()
+        self.page = page
+        self.controls = self.build()
+        self.page.update()
+
+    def build(self):
+        self.api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
+        self.api_key_field.value = fast8tube_data.API_KEY
+        settings_dialog = dialog('Настройки', self.api_key_field, [
+            ft.IconButton(icon=ft.icons.SUNNY, on_click=self.change_theme),
+            ft.TextButton("Сохранить", on_click=self.save_close_dialog_settings),
+            ft.TextButton("Закрыть", on_click=self.close_dialog_settings)])
+        self.page.dialog = settings_dialog
+        settings_dialog.open = True
+        return settings_dialog
+
+
 def main_window(page: ft.Page):
     page.title = "FAST8 Tube box"
     page.window_title_bar_hidden = True
@@ -155,79 +250,30 @@ def main_window(page: ft.Page):
     fast8tube_sql.check_database()
     page.theme_mode = ft.ThemeMode.DARK if fast8tube_data.THEME else ft.ThemeMode.LIGHT
 
-    def change_theme(e):
-        page.theme_mode = ft.ThemeMode.DARK if page.theme_mode == ft.ThemeMode.LIGHT else ft.ThemeMode.LIGHT
-        page.update()
-
-    api_key_field = ft.TextField(label='Ключ google-api', password=True, can_reveal_password=True)
-    api_key_field.value = fast8tube_data.API_KEY
-
-    def close_dialog_settings(e):
-        dialog_settings.open = False
-        page.update()
-
-    def save_close_dialog_settings(e):
-        fast8tube_sql.save_settings(api_key_field.value, page.theme_mode == ft.ThemeMode.DARK)
-        close_dialog_settings(e)
-
-    dialog_settings = dialog('Настройки', api_key_field, [
-        ft.IconButton(icon=ft.icons.SUNNY, on_click=change_theme),
-        ft.TextButton("Сохранить", on_click=save_close_dialog_settings),
-        ft.TextButton("Закрыть", on_click=close_dialog_settings)])
-
-    channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
-                                height=page.height - 200)
-    categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
-                                  height=page.height - 100)
-
-    def mark_view(e):
-        video = e.control.data
-        video.mark_view()
-        fill_videos(videos_list, mark_view, mark_skip)
-        page.update()
-
-    def mark_skip(e):
-        video = e.control.data
-        video.mark_skip()
-        fill_videos(videos_list, mark_view, mark_skip)
-        page.update()
-
-    def update_videos(e):
-        channel = e.control.data
-        channel.download_info()
-        channel.write()
-        channel.download_videos_list()
-        fill_videos(videos_list, mark_view, mark_skip)
-        page.update()
-
-    def open_settings(e):
-        page.dialog = dialog_settings
-        dialog_settings.open = True
-        page.update()
-
-    def edit_channel(e):
-        ChannelForm(page, e.control.data, channels_list)
-
     main_column = ft.Column(expand=True, height=page.height)
     slide_column = ft.Column(expand=False, auto_scroll=False, width=400, height=page.height)
-    page.add(
-        ft.Row([
-            main_column,
-            slide_column
-        ])
-    )
+    page.add(ft.Row([main_column, slide_column]))
 
-    videos_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=False, height=page.height)
-    main_column.controls.append(videos_list)
+    videos_list = VideosList(page)
+    main_column.controls.append(videos_list.controls)
+
+    channels_list = ChannelsList(page, videos_list)
+    categories_list = CategoriesList(page)
 
     def tabs_changed(e):
         if e.control.selected_index == 0:
-            slide_column.controls.append(channels_list)
-            slide_column.controls.remove(categories_list)
+            slide_column.controls.append(channels_list.controls)
+            slide_column.controls.remove(categories_list.controls)
         else:
-            slide_column.controls.remove(channels_list)
-            slide_column.controls.append(categories_list)
+            slide_column.controls.remove(channels_list.controls)
+            slide_column.controls.append(categories_list.controls)
         page.update()
+
+    def open_settings(e):
+        SettingsDialog(page)
+
+    def add_channel(e):
+        ChannelForm(page, Channel(''), channels_list)
 
     slide_column.controls.append(
         ft.Row([
@@ -235,12 +281,7 @@ def main_window(page: ft.Page):
                 ft.Container(ft.Text("FAST8 Tube box"), bgcolor=ft.colors.GREEN_ACCENT_700, padding=10),
                 expand=True),
             ft.IconButton(icon=ft.icons.SETTINGS, on_click=open_settings),
-            ft.IconButton(ft.icons.CLOSE, on_click=lambda _: page.window_close())
-        ])
-    )
-
-    def add_channel(e):
-        ChannelForm(page, Channel(''), channels_list)
+            ft.IconButton(ft.icons.CLOSE, on_click=lambda _: page.window_close())]))
 
     slide_column.controls.append(
         ft.Row([
@@ -250,16 +291,16 @@ def main_window(page: ft.Page):
                 on_change=tabs_changed,
                 tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])]))
 
-    slide_column.controls.append(channels_list)
+    slide_column.controls.append(channels_list.controls)
 
-    fill_channels(channels_list, update_videos, edit_channel)
-    fill_categories(categories_list)
-    fill_videos(videos_list, mark_view, mark_skip)
+    channels_list.fill()
+    categories_list.fill()
+    videos_list.fill()
 
     def page_resize(e):
         main_column.height = page.window_height
         slide_column.height = page.window_height
-        videos_list.height = page.window_height
+        videos_list.controls.height = page.window_height
         page.update()
 
     page.on_resize = page_resize
