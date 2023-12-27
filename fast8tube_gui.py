@@ -5,6 +5,7 @@ from fast8tube_data import Channel, Channels, Categories, Videos
 
 
 class ChannelForm(ft.UserControl):
+    new = True
     page = None
     channel = None
     categories_list = None
@@ -22,6 +23,9 @@ class ChannelForm(ft.UserControl):
         self.channel.from_begin = self.checkbox_from_begin.value
         self.channel.need_translate = self.checkbox_need_translate.value
 
+        if self.new:
+            self.channel.download_info()
+
         self.channel.write()
         self.channel.write_categories()
 
@@ -31,6 +35,9 @@ class ChannelForm(ft.UserControl):
 
     def mark_category(self, e):
         self.channel.categories[e.control.data]['use'] = e.control.value
+
+    def fill_channel_id(self, e):
+        self.channel.channel_id = e.control.value
 
     def __init__(self, page: ft.Page, channel: Channel, channels_list):
         super().__init__()
@@ -47,11 +54,13 @@ class ChannelForm(ft.UserControl):
         self.page.update()
 
     def build(self):
-        channel_id_field = ft.TextField(label='id канала', width=500)
+        channel_id_field = ft.TextField(label='id канала', width=500, on_change=self.fill_channel_id)
         channel_id_field.value = self.channel.channel_id
         if channel_id_field.value:
+            self.new = False
             channel_id_field.disabled = True
-        self.channel.read()
+            self.channel.read()
+
         self.categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height)
         self.checkbox_from_new = ft.Checkbox(label='Смотреть новое', value=self.channel.from_new, width=500)
         self.checkbox_from_begin = ft.Checkbox(label='Смотреть с начала', value=self.channel.from_begin, width=500)
@@ -167,7 +176,7 @@ def main_window(page: ft.Page):
         ft.TextButton("Закрыть", on_click=close_dialog_settings)])
 
     channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
-                                height=page.height - 100)
+                                height=page.height - 200)
     categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
                                   height=page.height - 100)
 
@@ -229,13 +238,18 @@ def main_window(page: ft.Page):
             ft.IconButton(ft.icons.CLOSE, on_click=lambda _: page.window_close())
         ])
     )
+
+    def add_channel(e):
+        ChannelForm(page, Channel(''), channels_list)
+
     slide_column.controls.append(
-        ft.Tabs(
-            selected_index=0,
-            on_change=tabs_changed,
-            tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")]
-        )
-    )
+        ft.Row([
+            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel),
+            ft.Tabs(
+                selected_index=0,
+                on_change=tabs_changed,
+                tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])]))
+
     slide_column.controls.append(channels_list)
 
     fill_channels(channels_list, update_videos, edit_channel)

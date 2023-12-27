@@ -119,7 +119,7 @@ def read_settings():
 def update_channel(channel):
     query = Query(text='SELECT channel_id FROM channels WHERE channel_id = ?', parameters=(channel.channel_id,))
     if len(query.select()) == 0:
-        query.text = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, categories_title, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        query.text = 'INSERT INTO channels (title, description, subscribers, from_begin, from_new, need_translate, add_date, uploads_id, categories_title, channel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     else:
         query.text = 'UPDATE channels SET title = ?, description = ?, subscribers = ?, from_begin = ?, from_new = ?, need_translate = ?, add_date = ?, uploads_id = ?, categories_title =? WHERE channel_id = ?'
 
