@@ -272,9 +272,6 @@ def main_window(page: ft.Page):
     def open_settings(e):
         SettingsDialog(page)
 
-    def add_channel(e):
-        ChannelForm(page, Channel(''), channels_list)
-
     slide_column.controls.append(
         ft.Row([
             ft.WindowDragArea(
@@ -283,13 +280,21 @@ def main_window(page: ft.Page):
             ft.IconButton(icon=ft.icons.SETTINGS, on_click=open_settings),
             ft.IconButton(ft.icons.CLOSE, on_click=lambda _: page.window_close())]))
 
+    tabs = ft.Tabs(
+        selected_index=0,
+        on_change=tabs_changed,
+        tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])
+
+    def add_channel_or_category(e):
+        if tabs.selected_index == 0:
+            ChannelForm(page, Channel(''), channels_list)
+        else:
+            pass
+
     slide_column.controls.append(
         ft.Row([
-            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel),
-            ft.Tabs(
-                selected_index=0,
-                on_change=tabs_changed,
-                tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])]))
+            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category),
+            tabs]))
 
     slide_column.controls.append(channels_list.controls)
 
