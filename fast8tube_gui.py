@@ -46,10 +46,7 @@ class ChannelForm(ft.UserControl):
         self.controls = self.build()
         for category in self.channel.categories:
             values = self.channel.categories.get(category)
-            self.categories_list.controls.append(
-                ft.Row([
-                    ft.Checkbox(label=values['title'], value=values['use'], data=category, on_change=self.mark_category)
-                ]))
+            self.categories_list.controls.append(ft.Row([ft.Checkbox(label=values['title'], value=values['use'], data=category, on_change=self.mark_category)]))
         self.page.update()
 
     def build(self):
@@ -75,9 +72,7 @@ class ChannelForm(ft.UserControl):
                     self.checkbox_from_new,
                     self.checkbox_from_begin,
                     self.checkbox_need_translate]),
-                ft.Column([
-                    ft.Text(value='Категории:'),
-                    self.categories_list])
+                ft.Column([ft.Text(value='Категории:'), self.categories_list])
             ], width=800)
 
         dialog_edit_channel = dialog(f'Youtube-канал {self.channel.title}', edit_channel_content, [
@@ -126,8 +121,7 @@ class VideosList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        videos_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=False, height=self.page.height)
-        return videos_list
+        return ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=False, height=self.page.height)
 
 
 class ChannelsList(ft.UserControl):
@@ -154,16 +148,10 @@ class ChannelsList(ft.UserControl):
         for channel in channels.list:
             self.controls.controls.append(
                 ft.ListTile(
-                    title=ft.Text(channel.title),
-                    subtitle=ft.Text(channel.categories_title),
-                    leading=ft.Icon(ft.icons.ABC),
-                    trailing=ft.PopupMenuButton(
-                        icon=ft.icons.MORE_VERT,
-                        items=[
-                            ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
-                                             data=channel),
-                            ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=self.update_videos,
-                                             data=channel),
+                    title=ft.Text(channel.title), subtitle=ft.Text(channel.categories_title), leading=ft.Icon(ft.icons.ABC),
+                    trailing=ft.PopupMenuButton(icon=ft.icons.MORE_VERT, items=[
+                            ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel, data=channel),
+                            ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=self.update_videos, data=channel),
                             ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)])))
 
     def __init__(self, page: ft.Page, videos_list):
@@ -173,23 +161,18 @@ class ChannelsList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
-                                    height=self.page.height - 200)
-
-        return channels_list
+        return ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 200)
 
 
 class CategoriesList(ft.UserControl):
     page = None
 
     def fill(self):
+        self.controls.controls.clear()
         categories = Categories()
         categories.read()
         for category in categories.list:
-            self.controls.controls.append(
-                ft.ListTile(
-                    title=ft.Text(category.title),
-                    leading=ft.Icon(ft.icons.LOCAL_PIZZA)))
+            self.controls.controls.append(ft.ListTile(title=ft.Text(category.title), leading=ft.Icon(ft.icons.LOCAL_PIZZA)))
 
     def __init__(self, page: ft.Page):
         super().__init__()
@@ -197,8 +180,7 @@ class CategoriesList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 100)
-        return categories_list
+        return ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 100)
 
 
 def dialog(title, content, actions):
@@ -275,15 +257,11 @@ def main_window(page: ft.Page):
     slide_column.controls.append(
         ft.Row([
             ft.WindowDragArea(
-                ft.Container(ft.Text("FAST8 Tube box"), bgcolor=ft.colors.GREEN_ACCENT_700, padding=10),
-                expand=True),
+                ft.Container(ft.Text("FAST8 Tube box"), bgcolor=ft.colors.GREEN_ACCENT_700, padding=10), expand=True),
             ft.IconButton(icon=ft.icons.SETTINGS, on_click=open_settings),
             ft.IconButton(ft.icons.CLOSE, on_click=lambda _: page.window_close())]))
 
-    tabs = ft.Tabs(
-        selected_index=0,
-        on_change=tabs_changed,
-        tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])
+    tabs = ft.Tabs(selected_index=0, on_change=tabs_changed, tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])
 
     def add_channel_or_category(e):
         if tabs.selected_index == 0:
@@ -291,11 +269,7 @@ def main_window(page: ft.Page):
         else:
             pass
 
-    slide_column.controls.append(
-        ft.Row([
-            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category),
-            tabs]))
-
+    slide_column.controls.append(ft.Row([ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category), tabs]))
     slide_column.controls.append(channels_list.controls)
 
     channels_list.fill()
