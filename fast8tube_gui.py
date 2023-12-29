@@ -78,7 +78,7 @@ class ChannelForm(ft.UserControl):
         dialog_edit_channel = dialog(f'Youtube-канал {self.channel.title}', edit_channel_content, [
             ft.TextButton("Сохранить", on_click=self.save_close_dialog_edit_channel),
             ft.TextButton("Закрыть", on_click=self.close_dialog_edit_channel)])
-        self.page.dialog = dialog_edit_channel
+        self.page.overlay.append(dialog_edit_channel)
         dialog_edit_channel.open = True
 
         return dialog_edit_channel
