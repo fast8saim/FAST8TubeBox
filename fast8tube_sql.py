@@ -156,19 +156,19 @@ def read_channel(channel_id=None):
 def read_channel_category(channel_id):
     query = Query()
     query.text = '''
-    SELECT
-        categories.category_id AS category_id,
-        categories.title AS title,
-        CASE
-            WHEN channel_categories.category_id IS NULL THEN
-                0
-            ELSE
-                1
-        END AS use
+        SELECT
+            categories.category_id AS category_id,
+            categories.title AS title,
+            CASE
+                WHEN channel_categories.category_id IS NULL THEN
+                    0
+                ELSE
+                    1
+            END AS use
         FROM categories
             LEFT JOIN channel_categories
-            ON categories.category_id = channel_categories.category_id
-            AND channel_categories.channel_id = ?'''
+                ON categories.category_id = channel_categories.category_id
+                AND channel_categories.channel_id = ?'''
 
     query.parameters = (channel_id,)
     return query.select(True)
