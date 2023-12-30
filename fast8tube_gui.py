@@ -1,7 +1,7 @@
 import flet as ft
 import fast8tube_sql
 import fast8tube_data
-from fast8tube_data import Channel, Channels, Categories, Videos
+from fast8tube_data import Channel, Channels, Category, Categories, Videos
 
 
 class ChannelForm(ft.UserControl):
@@ -263,11 +263,33 @@ def main_window(page: ft.Page):
 
     tabs = ft.Tabs(selected_index=0, on_change=tabs_changed, tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])
 
+    category_field = ft.TextField(label='Наименование категории', width=500)
+
+    def save_close_dialog_add_category(e):
+        if category_field.value:
+            category = Category(title=category_field.value)
+            category.write()
+            categories_list.fill()
+            category_field.value= ''
+            close_dialog_add_category(e)
+
+    def close_dialog_add_category(e):
+        page.dialog.open = False
+        page.update()
+
+    def add_category():
+        actions = [
+            ft.TextButton("Сохранить", on_click=save_close_dialog_add_category),
+            ft.TextButton("Закрыть", on_click=close_dialog_add_category)]
+        page.dialog = dialog(title='Добавить категорию', content=category_field, actions=actions)
+        page.dialog.open = True
+        page.update()
+
     def add_channel_or_category(e):
         if tabs.selected_index == 0:
             ChannelForm(page, Channel(''), channels_list)
         else:
-            pass
+            add_category()
 
     slide_column.controls.append(ft.Row([ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category), tabs]))
     slide_column.controls.append(channels_list.controls)
@@ -279,7 +301,6 @@ def main_window(page: ft.Page):
     def page_resize(e):
         main_column.height = page.window_height
         slide_column.height = page.window_height
-        videos_list.controls.height = page.window_height
         page.update()
 
     page.on_resize = page_resize
