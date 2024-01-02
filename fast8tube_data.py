@@ -82,8 +82,9 @@ class Channel:
                 sample['like_count'],
                 sample['comment_count'],
                 sample['thumb_address'],
-                sample['thumb_data']))
+                ''))
             video.write()
+            video.download_thumb()
 
 
 class Channels:

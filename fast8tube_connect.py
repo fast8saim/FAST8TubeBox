@@ -18,6 +18,27 @@ def download_channel_info(api_key, channel):
     channel.uploads_id = uploads_id
 
 
+def format_duration(duration):
+    h = 0
+    m = 0
+    s = 0
+
+    r = duration[2:]
+    if 'H' in r:
+        r = r.split('H')
+        h = r[0]
+        r = r[1]
+    if 'M' in r:
+        r = r.split('M')
+        m = r[0]
+        r = r[1]
+    if 'S' in r:
+        r = r.split('S')
+        s = r[0]
+
+    return f'{h}:{m}:{s}'
+
+
 def download_videos_list(api_key, channel):
     uploads_id = channel.uploads_id
     channel_id = channel.channel_id
@@ -46,7 +67,7 @@ def download_videos_list(api_key, channel):
                 'video_id': item['id'],
                 'title': item['snippet']['title'],
                 'published_at': datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
-                'duration': item['contentDetails']['duration'],
+                'duration': format_duration(item['contentDetails']['duration']),
                 'view_count': item['statistics']['viewCount'],
                 'like_count': item['statistics']['likeCount'],
                 'comment_count': item['statistics']['commentCount'],
