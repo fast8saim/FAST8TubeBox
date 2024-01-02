@@ -50,7 +50,7 @@ def download_videos_list(api_key, channel):
                 'view_count': item['statistics']['viewCount'],
                 'like_count': item['statistics']['likeCount'],
                 'comment_count': item['statistics']['commentCount'],
-                'thumb_address': item['snippet']['thumbnails']['standard']['url']
+                'thumb_address': item['snippet']['thumbnails']['medium']['url']
             })
 
         if not args['pageToken']:

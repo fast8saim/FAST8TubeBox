@@ -81,7 +81,8 @@ class Channel:
                 sample['view_count'],
                 sample['like_count'],
                 sample['comment_count'],
-                sample['thumb_address']))
+                sample['thumb_address'],
+                sample['thumb_data']))
             video.write()
 
 
@@ -140,6 +141,7 @@ class Video:
     like_count = 0
     comment_count = 0
     thumb_address = ''
+    thumb_data = ''
     channel = None
 
     def __init__(self, video_id=''):
@@ -153,7 +155,8 @@ class Video:
         self.channel.read()
 
     def download_thumb(self):
-        fast8tube_files.download_file(f'{self.video_id}.jpg', self.thumb_address)
+        thumb_data = fast8tube_files.download_file(self.thumb_address)
+        fast8tube_sql.save_video_thumb(self, thumb_data)
 
     def fill(self, sample):
         self.video_id = sample[0]
@@ -165,6 +168,7 @@ class Video:
         self.like_count = sample[6]
         self.comment_count = sample[7]
         self.thumb_address = sample[8]
+        self.thumb_data = sample[9].decode('utf-8') if sample[9] else ''
 
     def write(self):
         fast8tube_sql.update_video(self)

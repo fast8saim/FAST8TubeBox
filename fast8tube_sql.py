@@ -69,7 +69,7 @@ def check_database():
         like_count INTEGER NOT NULL,
         comment_count INTEGER NOT NULL,
         thumb_address TEXT NOT NULL,
-        thumb_data BLOB)'''
+        thumb_data TEXT)'''
     query.update()
     query.text = 'CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)'
     query.update()
@@ -236,6 +236,11 @@ def update_video(video):
     query.update(True)
 
 
+def save_video_thumb(video, thumb_data):
+    query = Query(text='UPDATE videos SET thumb_data = ? WHERE video_id = ?', parameters=(thumb_data, video.video_id,))
+    query.update(True)
+
+
 def read_video(video_id=None):
     query = Query()
 
@@ -246,7 +251,7 @@ def read_video(video_id=None):
         condition = 'WHERE video_id = ?'
         parameters = (video_id,)
 
-    query.text = f'SELECT videos.video_id AS video_id, videos.channel_id, videos.title, published_at, duration, view_count, like_count, comment_count, thumb_address FROM videos LEFT JOIN channels ON videos.channel_id = channels.channel_id {condition} ORDER BY channels.from_new DESC, published_at LIMIT 50'
+    query.text = f'SELECT videos.video_id AS video_id, videos.channel_id, videos.title, published_at, duration, view_count, like_count, comment_count, thumb_address, thumb_data FROM videos LEFT JOIN channels ON videos.channel_id = channels.channel_id {condition} ORDER BY channels.from_new DESC, published_at LIMIT 10'
     query.parameters = parameters
     return query.select(True)
 

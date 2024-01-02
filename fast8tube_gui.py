@@ -104,6 +104,8 @@ class VideosList(ft.UserControl):
     def download(self, e):
         video = e.control.data
         video.download_thumb()
+        self.fill()
+        self.page.update()
 
     def fill(self):
         self.controls.controls.clear()
@@ -112,11 +114,16 @@ class VideosList(ft.UserControl):
         videos.read()
         for video in videos.list:
             self.controls.controls.append(
-                ft.ListTile(title=ft.Text(video.title), subtitle=ft.Text(video.channel.title),
-                            trailing=ft.PopupMenuButton(icon=ft.icons.MORE_VERT, items=[
-                                ft.PopupMenuItem(text="Загрузить", icon=ft.icons.DOWNLOAD, data=video, on_click=self.download),
-                                ft.PopupMenuItem(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=self.mark_view),
-                                ft.PopupMenuItem(text="Пропустить", icon=ft.icons.REFRESH, data=video, on_click=self.mark_skip)])))
+                ft.Row([
+                    ft.Image(src_base64=video.thumb_data, height=180, width=320, border_radius=0),
+                    ft.Column([
+                        ft.Text(video.title),
+                        ft.Text(f'{video.channel.title} {video.channel.categories_title}'),
+                        ft.Text(f'Дата {video.published_at.strftime("%Y.%m.%d")} просмотров {video.view_count} лайков {video.like_count} комментариев {video.comment_count}'),
+                        ft.Row([
+                            ft.TextButton(text="Загрузить", icon=ft.icons.DOWNLOAD, data=video, on_click=self.download),
+                            ft.TextButton(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=self.mark_view),
+                            ft.TextButton(text="Пропустить", icon=ft.icons.REFRESH, data=video, on_click=self.mark_skip)])])]))
 
     def __init__(self, page: ft.Page):
         super().__init__()
@@ -180,7 +187,7 @@ class CategoriesList(ft.UserControl):
         categories.read()
         for category in categories.list:
             self.controls.controls.append(
-                ft.ListTile(title=ft.Text(category.title), leading=ft.Icon(ft.icons.LOCAL_PIZZA)))
+                ft.ListTile(title=ft.Text(category.title), leading=ft.Icon(ft.icons.LIST_SHARP)))
 
     def __init__(self, page: ft.Page):
         super().__init__()

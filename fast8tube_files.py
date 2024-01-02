@@ -1,8 +1,7 @@
 import urllib
+import base64
 
 
-def download_file(name, url):
+def download_file(url):
     resource = urllib.request.urlopen(url)
-    out = open(name, 'wb')
-    out.write(resource.read())
-    out.close()
+    return base64.b64encode(resource.read())
