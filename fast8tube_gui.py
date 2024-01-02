@@ -241,6 +241,43 @@ class SettingsDialog(ft.UserControl):
         return settings_dialog
 
 
+class CategoryForm(ft.UserControl):
+    page = None
+    category_field = None
+    categories_list = None
+
+    def save_close_dialog_add_category(self, e):
+        if self.category_field.value:
+            category = Category(title=self.category_field.value)
+            category.write()
+            self.categories_list.fill()
+            self.category_field.value = ''
+            self.close_dialog_add_category(e)
+
+    def close_dialog_add_category(self, e):
+        self.page.dialog.open = False
+        self.page.update()
+
+    def __init__(self, page: ft.Page, categories_list):
+        super().__init__()
+        self.page = page
+        self.categories_list = categories_list
+
+        self.controls = self.build()
+
+    def build(self):
+        self.category_field = ft.TextField(label='Наименование категории', width=500)
+        actions = [
+            ft.TextButton("Сохранить", on_click=self.save_close_dialog_add_category),
+            ft.TextButton("Закрыть", on_click=self.close_dialog_add_category)]
+        category_dialog = dialog(title='Добавить категорию', content=self.category_field, actions=actions)
+        self.page.dialog = category_dialog
+        self.page.dialog.open = True
+        self.page.update()
+
+        return category_dialog
+
+
 def main_window(page: ft.Page):
     page.title = "FAST8 Tube box"
     page.window_title_bar_hidden = True
@@ -279,33 +316,11 @@ def main_window(page: ft.Page):
 
     tabs = ft.Tabs(selected_index=0, on_change=tabs_changed, tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])
 
-    category_field = ft.TextField(label='Наименование категории', width=500)
-
-    def save_close_dialog_add_category(e):
-        if category_field.value:
-            category = Category(title=category_field.value)
-            category.write()
-            categories_list.fill()
-            category_field.value = ''
-            close_dialog_add_category(e)
-
-    def close_dialog_add_category(e):
-        page.dialog.open = False
-        page.update()
-
-    def add_category():
-        actions = [
-            ft.TextButton("Сохранить", on_click=save_close_dialog_add_category),
-            ft.TextButton("Закрыть", on_click=close_dialog_add_category)]
-        page.dialog = dialog(title='Добавить категорию', content=category_field, actions=actions)
-        page.dialog.open = True
-        page.update()
-
     def add_channel_or_category(e):
         if tabs.selected_index == 0:
             ChannelForm(page, Channel(''), channels_list)
         else:
-            add_category()
+            CategoryForm(page, categories_list)
 
     slide_column.controls.append(
         ft.Row([ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category), tabs]))
