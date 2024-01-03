@@ -77,7 +77,7 @@ class Channel:
                 sample['channel_id'],
                 sample['title'],
                 sample['published_at'],
-                sample['duration'],
+                sample['time'],
                 sample['view_count'],
                 sample['like_count'],
                 sample['comment_count'],
@@ -137,7 +137,7 @@ class Video:
     title = ''
     channel_id = ''
     published_at = ''
-    duration = ''
+    time = ''
     view_count = 0
     like_count = 0
     comment_count = 0
@@ -164,7 +164,7 @@ class Video:
         self.channel_id = sample[1]
         self.title = sample[2]
         self.published_at = sample[3]
-        self.duration = sample[4]
+        self.time = sample[4]
         self.view_count = sample[5]
         self.like_count = sample[6]
         self.comment_count = sample[7]

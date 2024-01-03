@@ -56,7 +56,8 @@ def check_database():
         need_translate BOOLEAN NOT NULL,
         add_date timestamp NOT NULL,
         uploads_id TEXT NOT NULL,
-        categories_title TEXT NOT NULL)'''
+        categories_title TEXT NOT NULL,
+        edit_date timestamp NOT NULL)'''
     query.update()
     query.text = '''
         CREATE TABLE IF NOT EXISTS videos (
@@ -64,12 +65,14 @@ def check_database():
         channel_id TEXT NOT NULL,
         title TEXT NOT NULL,
         published_at timestamp NOT NULL,
-        duration TEXT NOT NULL,
+        time TEXT NOT NULL,
+        duration INTEGER NOT NULL,
         view_count INTEGER NOT NULL,
         like_count INTEGER NOT NULL,
         comment_count INTEGER NOT NULL,
         thumb_address TEXT NOT NULL,
-        thumb_data TEXT)'''
+        thumb_data TEXT,
+        edit_date timestamp NOT NULL)'''
     query.update()
     query.text = 'CREATE INDEX IF NOT EXISTS idx_channel ON videos (channel_id)'
     query.update()
@@ -219,15 +222,15 @@ def read_category(category_id=None):
 def update_video(video):
     query = Query(text='SELECT video_id FROM videos WHERE video_id = ?', parameters=(video.video_id,))
     if len(query.select()) == 0:
-        query.text = 'INSERT INTO videos (title, channel_id, published_at, duration, view_count, like_count, comment_count, thumb_address, video_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        query.text = 'INSERT INTO videos (title, channel_id, published_at, time, view_count, like_count, comment_count, thumb_address, video_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     else:
-        query.text = 'UPDATE videos SET title = ?, channel_id = ?, published_at = ?, duration = ?, view_count = ?, like_count = ?, comment_count = ?, thumb_address = ? WHERE video_id = ?'
+        query.text = 'UPDATE videos SET title = ?, channel_id = ?, published_at = ?, time = ?, view_count = ?, like_count = ?, comment_count = ?, thumb_address = ? WHERE video_id = ?'
 
     query.parameters = (
         video.title,
         video.channel_id,
         video.published_at,
-        video.duration,
+        video.time,
         video.view_count,
         video.like_count,
         video.comment_count,
@@ -251,7 +254,7 @@ def read_video(video_id=None):
         condition = 'WHERE video_id = ?'
         parameters = (video_id,)
 
-    query.text = f'SELECT videos.video_id AS video_id, videos.channel_id, videos.title, published_at, duration, view_count, like_count, comment_count, thumb_address, thumb_data FROM videos LEFT JOIN channels ON videos.channel_id = channels.channel_id {condition} ORDER BY channels.from_new DESC, published_at LIMIT 10'
+    query.text = f'SELECT videos.video_id AS video_id, videos.channel_id, videos.title, published_at, time, view_count, like_count, comment_count, thumb_address, thumb_data FROM videos LEFT JOIN channels ON videos.channel_id = channels.channel_id {condition} ORDER BY channels.from_new DESC, published_at LIMIT 10'
     query.parameters = parameters
     return query.select(True)
 

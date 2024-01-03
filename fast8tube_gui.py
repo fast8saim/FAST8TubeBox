@@ -119,7 +119,7 @@ class VideosList(ft.UserControl):
                     ft.Column([
                         ft.Text(video.title),
                         ft.Text(f'{video.channel.title} {video.channel.categories_title}'),
-                        ft.Text(f'длительность {video.duration} дата {video.published_at.strftime("%Y.%m.%d")} просмотров {video.view_count} лайков {video.like_count} комментариев {video.comment_count}'),
+                        ft.Text(f'длительность {video.time} дата {video.published_at.strftime("%Y.%m.%d")} просмотров {video.view_count} лайков {video.like_count} комментариев {video.comment_count}'),
                         ft.Row([
                             ft.TextButton(text="Загрузить", icon=ft.icons.DOWNLOAD, data=video, on_click=self.download),
                             ft.TextButton(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=self.mark_view),
