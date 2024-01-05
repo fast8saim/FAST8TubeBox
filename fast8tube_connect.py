@@ -70,7 +70,7 @@ def download_videos_list(api_key, channel):
                 'time': format_duration(item['contentDetails']['duration']),
                 'view_count': item['statistics']['viewCount'],
                 'like_count': item['statistics']['likeCount'] if 'likeCount' in item['statistics'] else 0,
-                'comment_count': item['statistics']['commentCount'],
+                'comment_count': item['statistics']['commentCount'] if 'commentCount' in item['statistics'] else 0,
                 'thumb_address': item['snippet']['thumbnails']['medium']['url']
             })
 

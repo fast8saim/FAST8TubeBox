@@ -136,7 +136,11 @@ class VideosList(ft.UserControl):
 
 class ChannelsList(ft.UserControl):
     page = None
+    channels_list = None
     videos_list = None
+
+    def add_channel(self, e):
+        ChannelForm(self.page, Channel(''), self)
 
     def edit_channel(self, e):
         ChannelForm(self.page, e.control.data, self)
@@ -150,13 +154,13 @@ class ChannelsList(ft.UserControl):
         self.page.update()
 
     def fill(self):
-        self.controls.controls.clear()
+        self.channels_list.controls.clear()
 
         channels = Channels()
         channels.read()
 
         for channel in channels.list:
-            self.controls.controls.append(
+            self.channels_list.controls.append(
                 ft.Row([ft.Text(channel.title), ft.Text(channel.categories_title),
                         ft.TextButton(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
                                          data=channel),
@@ -171,8 +175,11 @@ class ChannelsList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        return ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
-                           height=self.page.height - 200)
+        self.channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 200)
+        channels_column = ft.Column([
+            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=self.add_channel),
+            self.channels_list])
+        return channels_column
 
 
 class CategoriesList(ft.UserControl):
