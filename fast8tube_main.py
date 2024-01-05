@@ -1,5 +1,5 @@
-import fast8tube_gui as f8gui
+import fast8tube_gui
 
 
 if __name__ == '__main__':
-    f8gui.create_gui()
+    fast8tube_gui.create_gui()

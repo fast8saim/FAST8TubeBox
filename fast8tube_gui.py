@@ -157,15 +157,12 @@ class ChannelsList(ft.UserControl):
 
         for channel in channels.list:
             self.controls.controls.append(
-                ft.ListTile(
-                    title=ft.Text(channel.title), subtitle=ft.Text(channel.categories_title),
-                    leading=ft.Icon(ft.icons.ABC),
-                    trailing=ft.PopupMenuButton(icon=ft.icons.MORE_VERT, items=[
-                        ft.PopupMenuItem(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
+                ft.Row([ft.Text(channel.title), ft.Text(channel.categories_title),
+                        ft.TextButton(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
                                          data=channel),
-                        ft.PopupMenuItem(text="Обновить", icon=ft.icons.REFRESH, on_click=self.update_videos,
+                        ft.TextButton(text="Обновить", icon=ft.icons.REFRESH, on_click=self.update_videos,
                                          data=channel),
-                        ft.PopupMenuItem(text="Удалить", icon=ft.icons.DELETE, data=channel)])))
+                        ft.TextButton(text="Удалить", icon=ft.icons.DELETE, data=channel)]))
 
     def __init__(self, page: ft.Page, videos_list):
         super().__init__()
@@ -278,43 +275,80 @@ class CategoryForm(ft.UserControl):
         return category_dialog
 
 
+def remove_controls(layout, controls):
+    if controls.controls in layout.controls:
+        layout.controls.remove(controls.controls)
+
+
 def main_window(page: ft.Page):
     page.title = "FAST8 Tube box"
-    page.window_title_bar_hidden = True
 
     fast8tube_sql.check_database()
     page.theme_mode = ft.ThemeMode.DARK if fast8tube_data.THEME else ft.ThemeMode.LIGHT
 
-    main_column = ft.Column(expand=True, height=page.height)
-    slide_column = ft.Column(expand=False, auto_scroll=False, width=400, height=page.height)
-    page.add(ft.Row([main_column, slide_column]))
-
     videos_list = VideosList(page)
-    main_column.controls.append(videos_list.controls)
-
     channels_list = ChannelsList(page, videos_list)
     categories_list = CategoriesList(page)
+    main_column = ft.Column(expand=True, height=page.height)
+    main_column.controls.append(videos_list.controls)
 
     def tabs_changed(e):
         if e.control.selected_index == 0:
-            slide_column.controls.append(channels_list.controls)
-            slide_column.controls.remove(categories_list.controls)
+            remove_controls(main_column, channels_list)
+            remove_controls(main_column, categories_list)
+            main_column.controls.append(videos_list.controls)
+        elif e.control.selected_index == 1:
+            remove_controls(main_column, videos_list)
+            remove_controls(main_column, categories_list)
+            main_column.controls.append(channels_list.controls)
+        elif e.control.selected_index == 2:
+            remove_controls(main_column, videos_list)
+            remove_controls(main_column, channels_list)
+            main_column.controls.append(categories_list.controls)
         else:
-            slide_column.controls.remove(channels_list.controls)
-            slide_column.controls.append(categories_list.controls)
+            remove_controls(main_column, videos_list)
+            remove_controls(main_column, channels_list)
+            remove_controls(main_column, categories_list)
         page.update()
 
+    rail = ft.NavigationRail(
+        selected_index=0,
+        label_type=ft.NavigationRailLabelType.ALL,
+        min_width=100,
+        min_extended_width=400,
+        group_alignment=-0.9,
+        destinations=[
+            ft.NavigationRailDestination(
+                icon=ft.icons.BOOKMARK_BORDER, selected_icon=ft.icons.BOOKMARK, label="Видео"
+            ),
+            ft.NavigationRailDestination(
+                icon_content=ft.Icon(ft.icons.BOOKMARK_BORDER),
+                selected_icon_content=ft.Icon(ft.icons.BOOKMARK),
+                label="Каналы",
+            ),
+            ft.NavigationRailDestination(
+                icon_content=ft.Icon(ft.icons.BOOKMARK_BORDER),
+                selected_icon_content=ft.Icon(ft.icons.BOOKMARK),
+                label="Категории",
+            ),
+            ft.NavigationRailDestination(
+                icon=ft.icons.SETTINGS_OUTLINED,
+                selected_icon_content=ft.Icon(ft.icons.SETTINGS),
+                label_content=ft.Text("Настройки"),
+            ),
+        ],
+        on_change=tabs_changed,
+    )
+
+    page.add(ft.Row([rail, main_column], expand=True, ))
+
+    videos_list.fill()
+    channels_list.fill()
+    categories_list.fill()
+
+    """
     def open_settings(e):
         SettingsDialog(page)
-
-    slide_column.controls.append(
-        ft.Row([
-            ft.WindowDragArea(
-                ft.Container(ft.Text("FAST8 Tube box"), bgcolor=ft.colors.GREEN_ACCENT_700, padding=10), expand=True),
-            ft.IconButton(icon=ft.icons.SETTINGS, on_click=open_settings),
-            ft.IconButton(ft.icons.CLOSE, on_click=lambda _: page.window_close())]))
-
-    tabs = ft.Tabs(selected_index=0, on_change=tabs_changed, tabs=[ft.Tab(text="Каналы"), ft.Tab(text="Категории")])
 
     def add_channel_or_category(e):
         if tabs.selected_index == 0:
@@ -325,14 +359,10 @@ def main_window(page: ft.Page):
     slide_column.controls.append(
         ft.Row([ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category), tabs]))
     slide_column.controls.append(channels_list.controls)
-
-    channels_list.fill()
-    categories_list.fill()
-    videos_list.fill()
+    """
 
     def page_resize(e):
         main_column.height = page.window_height
-        slide_column.height = page.window_height
         page.update()
 
     page.on_resize = page_resize
