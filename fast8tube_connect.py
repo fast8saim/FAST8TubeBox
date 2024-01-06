@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from pytube import YouTube
 import datetime
 
 
@@ -36,7 +37,7 @@ def format_duration(duration):
         r = r.split('S')
         s = r[0]
 
-    return f'{h}:{m}:{s}'
+    return f'{h}:{str(m).zfill(2)}:{str(s).zfill(2)}'
 
 
 def download_videos_list(api_key, channel):
@@ -78,3 +79,8 @@ def download_videos_list(api_key, channel):
             break
 
     return data
+
+
+def download_video_content(video, filepath):
+    yt = YouTube(f'https://www.youtube.com/watch?v={video.video_id}')
+    yt.streams.get_highest_resolution().download(output_path=filepath, filename=f'{video.video_id}.mp4')

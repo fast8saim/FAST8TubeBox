@@ -1,6 +1,6 @@
 import fast8tube_sql
 import fast8tube_connect
-import fast8tube_files
+import fast8tube_system
 import datetime
 
 API_KEY, THEME = fast8tube_sql.read_settings()
@@ -148,6 +148,12 @@ class Video:
     def __init__(self, video_id=''):
         self.video_id = video_id
 
+    def open_browser(self):
+        fast8tube_system.open_browser(f'https://www.youtube.com/watch?v={self.video_id}')
+
+    def download_video(self, filepath):
+        fast8tube_connect.download_video_content(self, filepath)
+
     def read(self):
         result = fast8tube_sql.read_video(self.video_id)
         for sample in result:
@@ -156,7 +162,7 @@ class Video:
         self.channel.read()
 
     def download_thumb(self):
-        thumb_data = fast8tube_files.download_file(self.thumb_address)
+        thumb_data = fast8tube_system.download_file(self.thumb_address)
         fast8tube_sql.save_video_thumb(self, thumb_data)
 
     def fill(self, sample):

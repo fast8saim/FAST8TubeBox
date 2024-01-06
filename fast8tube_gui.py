@@ -89,6 +89,11 @@ class ChannelForm(ft.UserControl):
 
 class VideosList(ft.UserControl):
     page = None
+    file_dialog = None
+
+    def open_browser(self, e):
+        video = e.control.data
+        video.open_browser()
 
     def mark_view(self, e):
         video = e.control.data
@@ -102,11 +107,18 @@ class VideosList(ft.UserControl):
         self.fill()
         self.page.update()
 
-    def download(self, e):
-        video = e.control.data
-        video.download_thumb()
-        self.fill()
+    def download_video(self, e):
+        self.page.overlay.remove(self.file_dialog)
         self.page.update()
+        if e.control.result:
+            video = e.control.data
+            video.download_video(e.control.result.path)
+
+    def open_file_dialog(self, e):
+        self.file_dialog = ft.FilePicker(on_result=self.download_video, data=e.control.data)
+        self.page.overlay.append(self.file_dialog)
+        self.page.update()
+        self.file_dialog.get_directory_path()
 
     def fill(self):
         self.controls.controls.clear()
@@ -120,14 +132,26 @@ class VideosList(ft.UserControl):
                     ft.Column([
                         ft.Text(video.title),
                         ft.Text(f'{video.channel.title} {video.channel.categories_title}'),
-                        ft.Text(
-                            f'длительность {video.time} дата {video.published_at.strftime("%Y.%m.%d")} просмотров {video.view_count} лайков {video.like_count} комментариев {video.comment_count}'),
                         ft.Row([
-                            ft.TextButton(text="Загрузить", icon=ft.icons.DOWNLOAD, data=video, on_click=self.download),
-                            ft.TextButton(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video,
+                            ft.Icon(name=ft.icons.TIMER),
+                            ft.Text(video.time),
+                            ft.Icon(name=ft.icons.DATE_RANGE),
+                            ft.Text(video.published_at.strftime("%Y.%m.%d")),
+                            ft.Icon(name=ft.icons.REMOVE_RED_EYE),
+                            ft.Text(video.view_count),
+                            ft.Icon(name=ft.icons.FAVORITE),
+                            ft.Text(video.like_count),
+                            ft.Icon(name=ft.icons.COMMENT),
+                            ft.Text(video.comment_count)]),
+                        ft.Row([
+                            ft.TextButton(text="Посмотреть", icon=ft.icons.VIDEO_CHAT, data=video,
+                                          on_click=self.open_browser),
+                            ft.TextButton(text="Отметить просмотренным", icon=ft.icons.MENU_OPEN, data=video,
                                           on_click=self.mark_view),
                             ft.TextButton(text="Пропустить", icon=ft.icons.REFRESH, data=video,
-                                          on_click=self.mark_skip)])])]))
+                                          on_click=self.mark_skip),
+                            ft.TextButton(text="Загрузить", icon=ft.icons.DOWNLOAD, data=video,
+                                          on_click=self.open_file_dialog)])])]))
 
     def __init__(self, page: ft.Page):
         super().__init__()
@@ -208,7 +232,8 @@ class CategoriesList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        self.categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, height=self.page.height)
+        self.categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False,
+                                           height=self.page.height)
         return ft.Row([
             ft.FloatingActionButton(icon=ft.icons.ADD, on_click=self.add_category),
             self.categories_list])
