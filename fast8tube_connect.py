@@ -68,7 +68,7 @@ def download_videos_list(api_key, channel):
                 'title': item['snippet']['title'],
                 'published_at': datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
                 'time': format_duration(item['contentDetails']['duration']),
-                'view_count': item['statistics']['viewCount'],
+                'view_count': item['statistics']['viewCount'] if 'viewCount' in item['statistics'] else 0,
                 'like_count': item['statistics']['likeCount'] if 'likeCount' in item['statistics'] else 0,
                 'comment_count': item['statistics']['commentCount'] if 'commentCount' in item['statistics'] else 0,
                 'thumb_address': item['snippet']['thumbnails']['medium']['url']

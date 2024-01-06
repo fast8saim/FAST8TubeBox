@@ -30,6 +30,7 @@ class ChannelForm(ft.UserControl):
         self.channel.write_categories()
 
         self.channels_list.fill()
+        self.channels_list.videos_list.fill()
         self.close_dialog_edit_channel(e)
 
     def mark_category(self, e):
@@ -115,15 +116,18 @@ class VideosList(ft.UserControl):
         for video in videos.list:
             self.controls.controls.append(
                 ft.Row([
-                    ft.Image(src_base64=video.thumb_data, width=320),
+                    ft.Image(src_base64=video.thumb_data, width=320, border_radius=ft.border_radius.all(10)),
                     ft.Column([
                         ft.Text(video.title),
                         ft.Text(f'{video.channel.title} {video.channel.categories_title}'),
-                        ft.Text(f'длительность {video.time} дата {video.published_at.strftime("%Y.%m.%d")} просмотров {video.view_count} лайков {video.like_count} комментариев {video.comment_count}'),
+                        ft.Text(
+                            f'длительность {video.time} дата {video.published_at.strftime("%Y.%m.%d")} просмотров {video.view_count} лайков {video.like_count} комментариев {video.comment_count}'),
                         ft.Row([
                             ft.TextButton(text="Загрузить", icon=ft.icons.DOWNLOAD, data=video, on_click=self.download),
-                            ft.TextButton(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video, on_click=self.mark_view),
-                            ft.TextButton(text="Пропустить", icon=ft.icons.REFRESH, data=video, on_click=self.mark_skip)])])]))
+                            ft.TextButton(text="Посмотреть", icon=ft.icons.MENU_OPEN, data=video,
+                                          on_click=self.mark_view),
+                            ft.TextButton(text="Пропустить", icon=ft.icons.REFRESH, data=video,
+                                          on_click=self.mark_skip)])])]))
 
     def __init__(self, page: ft.Page):
         super().__init__()
@@ -161,12 +165,14 @@ class ChannelsList(ft.UserControl):
 
         for channel in channels.list:
             self.channels_list.controls.append(
-                ft.Row([ft.Text(channel.title), ft.Text(channel.categories_title),
+                ft.Column([
+                    ft.Row([ft.Text(channel.title), ft.Text(channel.categories_title)]),
+                    ft.Row([
                         ft.TextButton(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
-                                         data=channel),
+                                      data=channel),
                         ft.TextButton(text="Обновить", icon=ft.icons.REFRESH, on_click=self.update_videos,
-                                         data=channel),
-                        ft.TextButton(text="Удалить", icon=ft.icons.DELETE, data=channel)]))
+                                      data=channel),
+                        ft.TextButton(text="Удалить", icon=ft.icons.DELETE, data=channel)])]))
 
     def __init__(self, page: ft.Page, videos_list):
         super().__init__()
@@ -175,22 +181,25 @@ class ChannelsList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        self.channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400, height=self.page.height - 200)
-        channels_column = ft.Column([
+        self.channels_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, height=self.page.height)
+        return ft.Row([
             ft.FloatingActionButton(icon=ft.icons.ADD, on_click=self.add_channel),
             self.channels_list])
-        return channels_column
 
 
 class CategoriesList(ft.UserControl):
     page = None
+    categories_list = None
+
+    def add_category(self, e):
+        CategoryForm(self.page, self)
 
     def fill(self):
-        self.controls.controls.clear()
+        self.categories_list.controls.clear()
         categories = Categories()
         categories.read()
         for category in categories.list:
-            self.controls.controls.append(
+            self.categories_list.controls.append(
                 ft.ListTile(title=ft.Text(category.title), leading=ft.Icon(ft.icons.LIST_SHARP)))
 
     def __init__(self, page: ft.Page):
@@ -199,8 +208,10 @@ class CategoriesList(ft.UserControl):
         self.controls = self.build()
 
     def build(self):
-        return ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
-                           height=self.page.height - 100)
+        self.categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, height=self.page.height)
+        return ft.Row([
+            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=self.add_category),
+            self.categories_list])
 
 
 def dialog(title, content, actions):
@@ -356,20 +367,12 @@ def main_window(page: ft.Page):
     """
     def open_settings(e):
         SettingsDialog(page)
-
-    def add_channel_or_category(e):
-        if tabs.selected_index == 0:
-            ChannelForm(page, Channel(''), channels_list)
-        else:
-            CategoryForm(page, categories_list)
-
-    slide_column.controls.append(
-        ft.Row([ft.FloatingActionButton(icon=ft.icons.ADD, on_click=add_channel_or_category), tabs]))
-    slide_column.controls.append(channels_list.controls)
     """
 
     def page_resize(e):
         main_column.height = page.window_height
+        channels_list.channels_list.height = page.window_height - 50
+        categories_list.categories_list.height = page.window_height - 50
         page.update()
 
     page.on_resize = page_resize
