@@ -87,6 +87,16 @@ class ChannelForm(ft.UserControl):
         return dialog_edit_channel
 
 
+def format_count(value):
+    if value > 1000000:
+        result = f'{value // 1000000} M'
+    elif value > 1000:
+        result = f'{value // 1000} K'
+    else:
+        result = value
+    return result
+
+
 class VideosList(ft.UserControl):
     page = None
     file_dialog = None
@@ -138,11 +148,11 @@ class VideosList(ft.UserControl):
                             ft.Icon(name=ft.icons.DATE_RANGE),
                             ft.Text(video.published_at.strftime("%Y.%m.%d")),
                             ft.Icon(name=ft.icons.REMOVE_RED_EYE),
-                            ft.Text(video.view_count),
+                            ft.Text(format_count(video.view_count)),
                             ft.Icon(name=ft.icons.FAVORITE),
-                            ft.Text(video.like_count),
+                            ft.Text(format_count(video.like_count)),
                             ft.Icon(name=ft.icons.COMMENT),
-                            ft.Text(video.comment_count)]),
+                            ft.Text(format_count(video.comment_count))]),
                         ft.Row([
                             ft.TextButton(text="Посмотреть", icon=ft.icons.VIDEO_CHAT, data=video,
                                           on_click=self.open_browser),
