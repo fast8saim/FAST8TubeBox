@@ -149,7 +149,7 @@ class Video:
         self.video_id = video_id
 
     def open_browser(self):
-        fast8tube_system.open_browser(f'https://www.youtube.com/watch?v={self.video_id}')
+        fast8tube_system.open_browser(f'https://www.youtube.com/watch?v={self.video_id}', self.channel.need_translate)
 
     def download_video(self, filepath):
         fast8tube_connect.download_video_content(self, filepath)

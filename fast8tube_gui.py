@@ -174,11 +174,18 @@ class ChannelsList(ft.UserControl):
         ChannelForm(self.page, e.control.data, self)
 
     def update_videos(self, e):
+        wait_dialog = dialog(title='загрузка...', content=ft.Icon(name=ft.icons.WIFI), actions=[])
+        self.page.dialog = wait_dialog
+        wait_dialog.open = True
+        self.page.update()
+
         channel = e.control.data
         channel.download_info()
         channel.write()
         channel.download_videos_list()
         self.videos_list.fill()
+
+        wait_dialog.open = False
         self.page.update()
 
     def fill(self):
