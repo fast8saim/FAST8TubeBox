@@ -184,7 +184,7 @@ class ChannelsList(ft.UserControl):
         ChannelForm(self.page, e.control.data, self)
 
     def update_videos(self, e):
-        wait_dialog = dialog(title='загрузка...', content=ft.Icon(name=ft.icons.WIFI), actions=[])
+        wait_dialog = dialog(title='Загружаю видео канала', content=ft.Row([ft.ProgressRing(width=64, height=64)], alignment=ft.MainAxisAlignment.CENTER), actions=[])
         self.page.dialog = wait_dialog
         wait_dialog.open = True
         self.page.update()
