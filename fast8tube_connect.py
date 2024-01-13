@@ -87,10 +87,7 @@ def download_video_content(video, filepath):
 
 
 def get_channel_id_by_url(url):
-    channel_name = url.replace('https://', '')
-    channel_name = channel_name.replace('www.youtube.com/', '')
-    channel_name = channel_name.replace('@', '')
-    channel_name = channel_name.replace('/', '')
+    channel_name = url.replace('https://', '').replace('www.youtube.com/', '').replace('@', '').replace('/', '')
 
     ch = Channel(url=f'https://www.youtube.com/c/{channel_name}')
     return ch.channel_id

@@ -29,7 +29,7 @@ class Channel:
         result = fast8tube_sql.read_channel(self.channel_id)
         for sample in result:
             self.fill(sample)
-        self.categories.clear()
+        self.categories = {}
         result = fast8tube_sql.read_channel_category(self.channel_id)
         for sample in result:
             if sample[2] == 1:
@@ -49,6 +49,7 @@ class Channel:
         self.add_date = sample[7]
         self.uploads_id = sample[8]
         self.categories_title = sample[9]
+        self.categories = {}
 
     def write(self):
         if not self.add_date:
