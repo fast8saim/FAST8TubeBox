@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-from pytube import YouTube
+from pytube import YouTube, Channel
 import datetime
 
 
@@ -84,3 +84,13 @@ def download_videos_list(api_key, channel):
 def download_video_content(video, filepath):
     yt = YouTube(f'https://www.youtube.com/watch?v={video.video_id}')
     yt.streams.get_highest_resolution().download(output_path=filepath, filename=f'{video.video_id}.mp4')
+
+
+def get_channel_id_by_url(url):
+    channel_name = url.replace('https://', '')
+    channel_name = channel_name.replace('www.youtube.com/', '')
+    channel_name = channel_name.replace('@', '')
+    channel_name = channel_name.replace('/', '')
+
+    ch = Channel(url=f'https://www.youtube.com/c/{channel_name}')
+    return ch.channel_id

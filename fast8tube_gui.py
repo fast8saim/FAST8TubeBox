@@ -13,6 +13,7 @@ class ChannelForm(ft.UserControl):
     checkbox_from_begin = None
     checkbox_need_translate = None
     channels_list = None
+    channel_id_field = None
 
     def close_dialog_edit_channel(self, e):
         self.controls.open = False
@@ -39,6 +40,11 @@ class ChannelForm(ft.UserControl):
     def fill_channel_id(self, e):
         self.channel.channel_id = e.control.value
 
+    def fill_channel_url(self, e):
+        self.channel.get_channel_id_by_url(e.control.value)
+        self.channel_id_field.value = self.channel.channel_id
+        self.page.update()
+
     def __init__(self, page: ft.Page, channel: Channel, channels_list):
         super().__init__()
         self.page = page
@@ -52,11 +58,11 @@ class ChannelForm(ft.UserControl):
         self.page.update()
 
     def build(self):
-        channel_id_field = ft.TextField(label='id канала', width=500, on_change=self.fill_channel_id)
-        channel_id_field.value = self.channel.channel_id
-        if channel_id_field.value:
+        channel_url_field = ft.TextField(label='Имя канала', width=500, on_change=self.fill_channel_url)
+        self.channel_id_field = ft.TextField(label='id канала', width=500, on_change=self.fill_channel_id, value=self.channel.channel_id)
+        if self.channel_id_field.value:
             self.new = False
-            channel_id_field.disabled = True
+            self.channel_id_field.disabled = True
             self.channel.read()
 
         self.categories_list = ft.ListView(expand=True, spacing=5, padding=5, auto_scroll=False, width=400,
@@ -68,7 +74,8 @@ class ChannelForm(ft.UserControl):
         edit_channel_content = ft.Row(
             [
                 ft.Column([
-                    channel_id_field,
+                    channel_url_field,
+                    self.channel_id_field,
                     ft.Text(expand=True, value=self.channel.description, width=500),
                     ft.TextField(label='Подписчиков', disabled=True, value=self.channel.subscribers, width=500),
                     ft.TextField(label='Дата добавления', disabled=True, value=self.channel.add_date, width=500),
