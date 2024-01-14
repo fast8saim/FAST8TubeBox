@@ -4,8 +4,13 @@ import subprocess
 
 
 def download_file(url):
-    resource = urllib.request.urlopen(url)
-    return base64.b64encode(resource.read())
+    try:
+        resource = urllib.request.urlopen(url)
+        data = base64.b64encode(resource.read())
+    except:
+        data = ''
+
+    return data
 
 
 def open_browser(url, need_translate=False):
