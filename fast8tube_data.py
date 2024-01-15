@@ -23,7 +23,7 @@ class Channel:
         self.channel_id = channel_id
 
     def get_channel_id_by_url(self, url):
-        self.channel_id = fast8tube_connect.get_channel_id_by_url(url)
+        self.channel_id = fast8tube_connect.get_channel_id_by_url(API_KEY, url)
 
     def read(self):
         result = fast8tube_sql.read_channel(self.channel_id)

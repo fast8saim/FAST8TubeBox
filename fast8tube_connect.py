@@ -86,8 +86,13 @@ def download_video_content(video, filepath):
     yt.streams.get_highest_resolution().download(output_path=filepath, filename=f'{video.video_id}.mp4')
 
 
-def get_channel_id_by_url(url):
-    channel_name = url.replace('https://', '').replace('www.youtube.com/', '').replace('@', '').replace('/', '')
+def get_channel_id_by_url(api_key, url):
+    service = build('youtube', 'v3', developerKey=api_key)
+    video_id = url.replace('https://', '').replace('www.youtube.com/', '').replace('watch?v=', '').replace('youtu.be/', '').replace('?feature=shared', '')
+    r = service.videos().list(id=video_id, part='snippet').execute()
+    channel_id = ''
+    for item in r['items']:
+        channel_id = item['snippet']['channelId']
+        break
 
-    ch = Channel(url=f'https://www.youtube.com/c/{channel_name}')
-    return ch.channel_id
+    return channel_id
