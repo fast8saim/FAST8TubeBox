@@ -158,6 +158,21 @@ def read_channel(channel_id=None):
     return query.select(True)
 
 
+def read_channel_info(channel_id=None):
+    query = Query()
+
+    if channel_id is None:
+        condition = ''
+        parameters = ()
+    else:
+        condition = 'WHERE channel_id = ?'
+        parameters = (channel_id,)
+
+    query.text = f'SELECT channel_id, SUM(1) AS videos_count FROM videos {condition} GROUP BY channel_id'
+    query.parameters = parameters
+    return query.select(True)
+
+
 def read_channel_category(channel_id):
     query = Query()
     query.text = '''

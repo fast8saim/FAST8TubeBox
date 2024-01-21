@@ -214,7 +214,7 @@ class ChannelsList(ft.UserControl):
         for channel in channels.list:
             self.channels_list.controls.append(
                 ft.Column([
-                    ft.Row([ft.Text(channel.title), ft.Text(channel.categories_title)]),
+                    ft.Row([ft.Text(channel.title), ft.Text(channel.categories_title), ft.Text(channel.videos_count)]),
                     ft.Row([
                         ft.TextButton(text="Настроить", icon=ft.icons.MENU_OPEN, on_click=self.edit_channel,
                                       data=channel),

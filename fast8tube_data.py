@@ -18,6 +18,7 @@ class Channel:
     uploads_id = ''
     categories = {}
     categories_title = ''
+    videos_count = 0
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -37,6 +38,9 @@ class Channel:
             else:
                 use = False
             self.categories.setdefault(sample[0], {'title': sample[1], 'use': use})
+        result = fast8tube_sql.read_channel_info(self.channel_id)
+        if result:
+            self.videos_count = result[0]
 
     def fill(self, sample):
         self.channel_id = sample[0]
@@ -100,6 +104,12 @@ class Channels:
         for sample in result:
             channel = Channel(sample[0])
             channel.fill(sample)
+
+            # TODO: Optimize
+            result = fast8tube_sql.read_channel_info(channel.channel_id)
+            if result:
+                channel.videos_count = result[0][1]
+
             self.list.append(channel)
 
 
