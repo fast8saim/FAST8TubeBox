@@ -88,6 +88,9 @@ def download_video_content(video, filepath):
 
 def get_channel_id_by_url(api_key, url):
     service = build('youtube', 'v3', developerKey=api_key)
+    channel_pos = url.find('&ab_channel=')
+    if channel_pos != -1:
+        url = url[:channel_pos]
     video_id = url.replace('https://', '').replace('www.youtube.com/', '').replace('watch?v=', '').replace('youtu.be/', '').replace('?feature=shared', '')
     r = service.videos().list(id=video_id, part='snippet').execute()
     channel_id = ''

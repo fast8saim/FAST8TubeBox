@@ -1,7 +1,7 @@
 import fast8tube_gui
 import sys
 
-VERSION = '2024.01.21.1'
+VERSION = '2024.01.25.1'
 
 if __name__ == '__main__':
 
