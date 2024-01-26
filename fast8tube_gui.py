@@ -58,7 +58,7 @@ class ChannelForm(ft.UserControl):
         self.page.update()
 
     def build(self):
-        channel_url_field = ft.TextField(label='Имя канала', width=500, on_change=self.fill_channel_url)
+        channel_url_field = ft.TextField(label='Ссылка на любое видео с канала', width=500, on_change=self.fill_channel_url)
         self.channel_id_field = ft.TextField(label='id канала', width=500, on_change=self.fill_channel_id, value=self.channel.channel_id)
         if self.channel_id_field.value:
             self.new = False
