@@ -36,6 +36,10 @@ class Query:
         if self.connection:
             self.connection.close()
 
+    def vacuum(self):
+        self.connection.execute("VACUUM")
+        self.close_connection()
+
 
 def check_database():
     query = Query()
