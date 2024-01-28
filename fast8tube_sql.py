@@ -283,3 +283,8 @@ def update_history_videos(video_id, view=False, skip=False):
     query.text = 'INSERT INTO history_videos (video_id, date, view, skip) VALUES (?, ?, ?, ?)'
     query.parameters = (video_id, datetime.datetime.now(), view, skip)
     query.update(True)
+
+
+def vacuum():
+    query = Query()
+    query.vacuum()
